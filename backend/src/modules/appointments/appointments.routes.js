@@ -13,6 +13,13 @@ router.post(
 );
 
 router.get(
+  "/my-appointments",
+  authenticate,
+  authorize("PATIENT"),
+  controller.getMyAppointments
+);
+
+router.get(
   "/doctor",
   authenticate,
   authorize("DOCTOR"),

@@ -15,15 +15,41 @@ exports.getAppointmentsForDoctor = async (doctorUserId) => {
       a.scheduled_end,
       a.status,
       a.reason,
-      p.patient_id
+      p.patient_id,
+      p.full_name_encrypted as patient_name,
+      p.dob as date_of_birth
     FROM appointments a
     JOIN patients p ON a.patient_id = p.patient_id
     JOIN users u ON p.user_id = u.user_id
-    WHERE a.doctor_id = $1
+    JOIN doctors d ON a.doctor_id = d.doctor_id
+    WHERE d.user_id = $1
     ORDER BY a.scheduled_start ASC
   `;
 
   const { rows } = await pool.query(query, [doctorUserId]);
+  return rows;
+};
+
+/**
+ * Get all appointments for a patient
+ */
+exports.getAppointmentsForPatient = async (patientId) => {
+  const query = `
+    SELECT
+      a.appointment_id,
+      a.scheduled_start,
+      a.scheduled_end,
+      a.status,
+      a.reason,
+      d.full_name as doctor_name,
+      d.specialization
+    FROM appointments a
+    JOIN doctors d ON a.doctor_id = d.doctor_id
+    WHERE a.patient_id = $1
+    ORDER BY a.scheduled_start ASC
+  `;
+
+  const { rows } = await pool.query(query, [patientId]);
   return rows;
 };
 

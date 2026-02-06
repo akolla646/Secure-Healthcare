@@ -107,3 +107,23 @@ exports.getVitalsByPatient = async (patientId, user) => {
     vitals: await repo.getPatientVitals(patientId)
   };
 };
+
+exports.getMyVitals = async (user) => {
+  if (user.role !== "PATIENT") {
+    const err = new Error("Access denied");
+    err.status = 403;
+    throw err;
+  }
+
+  const patient = await repo.getPatientIdByUserId(user.user_id);
+  if (!patient) {
+    const err = new Error("Patient profile not found");
+    err.status = 404;
+    throw err;
+  }
+
+  return {
+    patient_id: patient.patient_id,
+    vitals: await repo.getPatientVitals(patient.patient_id)
+  };
+};

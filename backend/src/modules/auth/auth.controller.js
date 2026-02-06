@@ -30,6 +30,33 @@ async function generateKeys(req, res) {
 }
 
 /**
+ * PUBLIC REGISTER
+ */
+async function publicRegister(req, res) {
+  const { email, password, name, role, dob, gender, blood_group } = req.body;
+
+  try {
+    // We pass 'name' as 'full_name' to service
+    await authService.publicRegister({
+      email,
+      password,
+      role,
+      full_name: name,
+      dob,
+      gender,
+      blood_group
+    });
+
+    return res.status(201).json({
+      message: "Registration successful. OTP sent."
+    });
+
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+}
+
+/**
  * LOGIN (STEP 1 – PASSWORD CHECK)
  */
 async function login(req, res) {
@@ -92,6 +119,30 @@ async function verifyLoginOTP(req, res) {
 }
 
 /**
+ * RESEND OTP
+ */
+async function resendOtp(req, res) {
+  const { username, email } = req.body;
+  // Use username if present, else email (fallback/compatibility)
+  const identifier = username || email;
+
+  try {
+    await authService.resendOtp(identifier);
+
+    await logAudit({
+      actor_user_id: null, // We might not know the ID yet securely, or could look it up.
+      action: "RESEND_OTP",
+      entity_type: "SYSTEM",
+      entity_id: null
+    });
+
+    return res.status(200).json({ message: "OTP resent" });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+}
+
+/**
  * LOGOUT
  */
 async function logout(req, res) {
@@ -145,13 +196,13 @@ async function activateAccount(req, res) {
 
   try {
     // ✅ FIXED: service method name
-    await authService.activateAccount(email, otp, password);
+    const result = await authService.activateAccount(email, otp, password);
 
     await logAudit({
-      actor_user_id: null,
+      actor_user_id: result.user_id, // The user acting is the one activating
       action: "ACCOUNT_ACTIVATED",
       entity_type: "USER",
-      entity_id: null
+      entity_id: result.user_id      // The entity being modified is the user
     });
 
     return res.status(200).json({
@@ -215,11 +266,14 @@ async function resetPassword(req, res) {
 
 module.exports = {
   generateKeys,
+  publicRegister,
   login,
   verifyLoginOTP,
   logout,
   adminCreateUser,
   activateAccount,
   forgotPassword,
-  resetPassword
+  forgotPassword,
+  resetPassword,
+  resendOtp
 };

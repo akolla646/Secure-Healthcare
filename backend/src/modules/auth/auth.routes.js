@@ -11,8 +11,14 @@ const { authorize } = require("../../middleware/role.middleware");
 // Step 1: Username + Password → OTP (if MFA enabled)
 router.post("/login", controller.login);
 
+// Public Registration
+router.post("/register", controller.publicRegister);
+
 // Step 2: Verify OTP → JWT
 router.post("/login/verify-otp", controller.verifyLoginOTP);
+
+// Resend OTP
+router.post("/resend-otp", controller.resendOtp);
 
 // Logout (invalidate session / token)
 router.post("/logout", authenticate, controller.logout);

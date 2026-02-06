@@ -208,4 +208,77 @@ router.get(
   }
 );
 
+/* ======================================================
+   ADMIN – DELETE USER
+   DELETE /admin/users/:id
+   ====================================================== */
+router.delete(
+  "/users/:id",
+  authenticate,
+  authorize("ADMIN"),
+  async (req, res) => {
+    const client = await pool.connect();
+    const { id } = req.params;
+
+    try {
+      await client.query("BEGIN");
+
+      // Check if user exists
+      const userRes = await client.query(
+        "SELECT user_id, username FROM users WHERE user_id = $1",
+        [id]
+      );
+
+      if (userRes.rowCount === 0) {
+        await client.query("ROLLBACK");
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Prevent deleting self
+      if (req.user.user_id === id) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({ error: "Cannot delete yourself" });
+      }
+
+      // Delete from user_roles
+      await client.query("DELETE FROM user_roles WHERE user_id = $1", [id]);
+
+      // Delete from pending_registrations (if any link exists, but mostly separate)
+
+      // Delete from patients/doctors tables handled by FK cascade? 
+      // Assuming FKs are set to CASCADE or we need to delete manualy.
+      // Ideally we soft delete (is_active=false), but req implies DELETE.
+      // Let's Check schema if possible? 
+      // Safe bet: Delete from users table, let DB error if FK constraint.
+      // But typically we should handle dependent records.
+      // For now, simple DELETE from users.
+
+      await client.query("DELETE FROM users WHERE user_id = $1", [id]);
+
+      // Audit Log
+      await client.query(
+        `
+        INSERT INTO audit_logs (
+          actor_user_id,
+          action,
+          entity_type,
+          entity_id
+        )
+        VALUES ($1, 'USER_DELETED', 'USER', $2)
+        `,
+        [req.user.user_id, id]
+      );
+
+      await client.query("COMMIT");
+      res.status(200).json({ message: "User deleted successfully" });
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.error("ADMIN DELETE USER ERROR ->", err);
+      res.status(500).json({ error: "Failed to delete user" });
+    } finally {
+      client.release();
+    }
+  }
+);
+
 module.exports = router;

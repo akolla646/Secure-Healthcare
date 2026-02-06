@@ -5,6 +5,17 @@ const controller = require("./vitals.controller");
 // Record vitals
 router.post("/", controller.recordVitals);
 
+// View my vitals (Patient)
+const { authenticate } = require("../../middleware/auth.middleware");
+const { authorize } = require("../../middleware/role.middleware");
+
+router.get(
+  "/my-vitals",
+  authenticate,
+  authorize("PATIENT"),
+  controller.getMyVitals
+);
+
 // View vitals by appointment
 router.get(
   "/appointments/:appointment_id/vitals",

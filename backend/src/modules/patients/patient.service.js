@@ -1,5 +1,6 @@
 const pool = require("../../config/db");
 const bcrypt = require("bcrypt");
+const { encrypt } = require("../../utils/encryption");
 
 /**
  * CREATE patient (WITHOUT user account)
@@ -12,6 +13,8 @@ async function createPatient(data) {
     gender,
     blood_group
   } = data;
+
+  const encryptedName = encrypt(full_name);
 
   const result = await pool.query(
     `
@@ -42,7 +45,7 @@ async function createPatient(data) {
     )
     RETURNING *
     `,
-    [user_id, full_name, dob, gender, blood_group]
+    [user_id, encryptedName, dob, gender, blood_group]
   );
 
   return result.rows[0];
@@ -125,6 +128,7 @@ async function registerPatientWithUser(data) {
   );
 
   const user_id = userResult.rows[0].user_id;
+  const encryptedName = encrypt(full_name);
 
   // 4️⃣ Create patient linked to user
   const patientResult = await pool.query(
@@ -156,7 +160,7 @@ async function registerPatientWithUser(data) {
     )
     RETURNING *
     `,
-    [user_id, full_name, dob, gender, blood_group]
+    [user_id, encryptedName, dob, gender, blood_group]
   );
 
   return patientResult.rows[0];

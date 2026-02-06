@@ -20,6 +20,11 @@ router.get(
     try {
       const { limit = 100, offset = 0 } = req.query;
 
+      // 1. Get total count
+      const countRes = await pool.query("SELECT COUNT(*) FROM audit_logs");
+      const totalCount = parseInt(countRes.rows[0].count, 10);
+
+      // 2. Fetch paginated logs
       const result = await pool.query(
         `
         SELECT
@@ -38,7 +43,7 @@ router.get(
       );
 
       res.status(200).json({
-        count: result.rowCount,
+        count: totalCount,
         logs: result.rows
       });
     } catch (err) {

@@ -20,18 +20,20 @@ router.post(
   authorize("DOCTOR"),
   async (req, res) => {
     try {
-      const { patient_id, test_id } = req.body;
+      const { patient_id, test_id, test_name } = req.body;
 
-      if (!patient_id || !test_id) {
+      // Allow test_name OR test_id
+      if (!patient_id || (!test_id && !test_name)) {
         return res.status(400).json({
-          error: "patient_id and test_id are required"
+          error: "patient_id and either test_id or test_name are required"
         });
       }
 
       const order = await labsController.createLabOrder(
         patient_id,
         test_id,
-        req.user.user_id
+        req.user.user_id,
+        test_name
       );
 
       await logAudit({
@@ -206,6 +208,45 @@ router.get(
       return res.status(200).json(reports);
     } catch (err) {
       console.error("DOCTOR LAB REPORTS ERROR →", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+/* ======================================================
+   7️⃣ GET AVAILABLE LAB TESTS
+   GET /labs/tests
+   (Accessible by Doctors for ordering)
+   ====================================================== */
+router.get(
+  "/tests",
+  authenticate,
+  authorize("DOCTOR"),
+  async (req, res) => {
+    try {
+      const tests = await labsController.getLabTests();
+      return res.status(200).json(tests);
+    } catch (err) {
+      console.error("GET LAB TESTS ERROR →", err);
+      return res.status(500).json({ error: err.message });
+    }
+  }
+);
+
+/* ======================================================
+   8️⃣ GET PENDING ORDERS (LAB TECH)
+   GET /labs/pending-orders
+   ====================================================== */
+router.get(
+  "/pending-orders",
+  authenticate,
+  authorize("LAB_TECH"),
+  async (req, res) => {
+    try {
+      const orders = await labsController.getPendingLabOrders();
+      return res.status(200).json(orders);
+    } catch (err) {
+      console.error("GET PENDING ORDERS ERROR →", err);
       return res.status(500).json({ error: err.message });
     }
   }

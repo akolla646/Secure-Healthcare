@@ -1,6 +1,8 @@
 const pool = require("../../config/db");
 const repo = require("./appointments.repository");
 
+const { decrypt } = require("../../utils/encryption");
+
 /**
  * Doctor views their appointments
  */
@@ -11,14 +13,41 @@ exports.getDoctorAppointments = async (user) => {
     throw err;
   }
 
-  return await repo.getAppointmentsForDoctor(user.user_id);
+  const appointments = await repo.getAppointmentsForDoctor(user.user_id);
+
+  return appointments.map(appt => ({
+    ...appt,
+    patient_name: appt.patient_name ? decrypt(appt.patient_name) : 'Unknown'
+  }));
 };
- 
+
+/**
+ * Patient views their own appointments
+ */
+exports.getPatientAppointments = async (user) => {
+  if (user.role !== "PATIENT") {
+    const err = new Error("Only patients can view their own appointments");
+    err.status = 403;
+    throw err;
+  }
+
+  // Resolve patient_id
+  const patient = await repo.getPatientIdByUserId(user.user_id);
+  if (!patient) {
+    const err = new Error("Patient profile not found");
+    err.status = 404;
+    throw err;
+  }
+
+  return await repo.getAppointmentsForPatient(patient.patient_id);
+};
+
 /**
  * Book appointment (FULL LOGIC)
  */
 exports.bookAppointment = async (data, user) => {
   const {
+    doctor_id: inputDoctorId,
     doctor_name,
     scheduled_start,
     scheduled_end,
@@ -34,14 +63,18 @@ exports.bookAppointment = async (data, user) => {
   }
   const patient_id = patient.patient_id;
 
-  // 🔎 Resolve doctor_id from doctor_name
-  const doctor = await repo.getDoctorByName(doctor_name);
-  if (!doctor) {
-    const err = new Error("Doctor not found");
-    err.status = 404;
-    throw err;
+  // 🔎 Resolve doctor_id
+  let doctor_id = inputDoctorId;
+
+  if (!doctor_id) {
+    const doctor = await repo.getDoctorByName(doctor_name);
+    if (!doctor) {
+      const err = new Error("Doctor not found");
+      err.status = 404;
+      throw err;
+    }
+    doctor_id = doctor.doctor_id;
   }
-  const doctor_id = doctor.doctor_id;
 
   // 🩺 Validate doctor role
   const isDoctor = await repo.isDoctor(doctor_id);

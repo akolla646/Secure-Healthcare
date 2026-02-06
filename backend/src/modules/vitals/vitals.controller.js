@@ -41,3 +41,14 @@ exports.getVitalsByPatient = async (req, res) => {
     });
   }
 };
+
+exports.getMyVitals = async (req, res) => {
+  try {
+    const result = await vitalsService.getMyVitals(req.user);
+    res.json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({
+      error: err.message
+    });
+  }
+};

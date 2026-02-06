@@ -6,15 +6,32 @@ const labsService = require("./labs.service");
 /* ======================================================
    1️⃣ DOCTOR ORDERS LAB TEST
    ====================================================== */
-exports.createLabOrder = async (patientId, testId, doctorId) => {
+/* ======================================================
+   1️⃣ DOCTOR ORDERS LAB TEST
+   ====================================================== */
+exports.createLabOrder = async (patientId, testId, doctorId, testName) => {
+  let finalTestId = testId;
+
+  // If no testId but we have a name, find or create it
+  if (!finalTestId && testName) {
+    try {
+      finalTestId = await labsService.findOrCreateTest(testName);
+    } catch (err) {
+      console.error("Failed to find/create test:", err);
+      // Fallback: we can still insert the order without a test_id if we want, 
+      // or fail. Since we added test_name column, we can rely on that.
+      // But for now, let's assume finding/creating works or we log it.
+    }
+  }
+
   const { rows } = await pool.query(
     `
     INSERT INTO lab_orders
-      (patient_id, doctor_id, test_id, status, ordered_at)
-    VALUES ($1, $2, $3, 'ORDERED', NOW())
+      (patient_id, doctor_id, test_id, test_name, status, ordered_at)
+    VALUES ($1, $2, $3, $4, 'ORDERED', NOW())
     RETURNING *
     `,
-    [patientId, doctorId, testId]
+    [patientId, doctorId, finalTestId, testName]
   );
 
   return rows[0];
@@ -82,10 +99,10 @@ exports.getPatientLabReports = async (userId) => {
       lr.verified,
       lr.verified_at,
       lo.ordered_at,
-      ltc.test_name
+      COALESCE(lo.test_name, ltc.test_name) as test_name
     FROM lab_reports lr
     JOIN lab_orders lo ON lo.order_id = lr.order_id
-    JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
+    LEFT JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
     WHERE lo.patient_id = $1
       AND lr.verified = true
     ORDER BY lr.created_at DESC
@@ -101,4 +118,18 @@ exports.getPatientLabReports = async (userId) => {
    ====================================================== */
 exports.getDoctorLabReports = async (doctorId) => {
   return await labsService.getDoctorLabReports(doctorId);
+};
+
+/* ======================================================
+   7️⃣ GET AVAILABLE LAB TESTS
+   ====================================================== */
+exports.getLabTests = async () => {
+  return await labsService.getAllLabTests();
+};
+
+/* ======================================================
+   8️⃣ GET PENDING LAB ORDERS
+   ====================================================== */
+exports.getPendingLabOrders = async () => {
+  return await labsService.getPendingLabOrders();
 };

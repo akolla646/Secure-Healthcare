@@ -22,6 +22,20 @@ exports.getDoctorAppointments = async (req, res) => {
 
     res.status(200).json(appointments);
   } catch (err) {
+    console.error("Error fetching doctor appointments:", err); // DEBUG LOG
+    res.status(err.status || 500).json({
+      error: err.message
+    });
+  }
+};
+
+exports.getMyAppointments = async (req, res) => {
+  try {
+    const appointments = await appointmentsService.getPatientAppointments(
+      req.user
+    );
+    res.status(200).json(appointments);
+  } catch (err) {
     res.status(err.status || 500).json({
       error: err.message
     });

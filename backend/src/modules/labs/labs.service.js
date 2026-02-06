@@ -250,15 +250,45 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
 
     // 2️⃣ Verify integrity (hash encrypted data)
     // The result_values is now directly the encrypted string (TEXT)
-    const encryptedString = report.result_values;
-    const cipherText = encryptedString;
+    let cipherText = report.result_values;
 
-    const recalculatedHash = hashData(cipherText);
+    // Check integrity of raw value
+    let recalculatedHash = hashData(cipherText);
+
+    // BACKWARD COMPATIBILITY FIX:
+    // Some reports were stored as JSON stringified objects {"cipher": "..."}
+    // But the hash was calculated on the inner "...".
+    // We detect this case and unwrap it.
+    if (recalculatedHash !== report.report_hash) {
+      if (cipherText.trim().startsWith('{"cipher":')) {
+        try {
+          const parsed = JSON.parse(cipherText);
+          if (parsed.cipher) {
+            const innerHash = hashData(parsed.cipher);
+            if (innerHash === report.report_hash) {
+              // Integrity PASSES on inner text
+              cipherText = parsed.cipher;
+              recalculatedHash = innerHash; // Update so downstream checks pass if needed
+            }
+          }
+        } catch (e) {
+          // Parse error, ignore and fall through to failure
+        }
+      }
+    }
+
     if (recalculatedHash !== report.report_hash) {
       throw new Error("Report integrity check failed");
     }
 
     // 3️⃣ Verify lab technician signature
+    if (!report.lab_public_key) {
+      // Fallback or warning? For now, we cant verify without key.
+      // But throwing error prevents viewing. Maybe we should allow viewing but mark unverified?
+      // Requirement says strict verification.
+      throw new Error("Lab technician public key not found. Cannot verify report signature.");
+    }
+
     const labValid = verifySignature(
       report.report_hash,
       report.lab_tech_signature.toString(),
@@ -271,6 +301,12 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
 
     // 4️⃣ Verify doctor signature (if verified)
     if (report.verified) {
+      if (!report.doctor_public_key) {
+        // CRITICAL FIX: If doctor key is missing, don't crash.
+        // We'll throw specific error so we know why it failed.
+        throw new Error("Doctor public key not found. Cannot verify doctor signature.");
+      }
+
       const doctorValid = verifySignature(
         report.report_hash,
         report.doctor_signature.toString(),
@@ -283,9 +319,15 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
     }
 
     // 5️⃣ Decrypt AFTER verification
-    const decryptedResult = JSON.parse(
-      decrypt(cipherText)
-    );
+    let decryptedResult;
+    try {
+      decryptedResult = JSON.parse(
+        decrypt(cipherText)
+      );
+    } catch (err) {
+      console.error("Decryption error:", err);
+      throw new Error("Decryption failed: The report data appears to be corrupted or encrypted with an old key.");
+    }
 
     // 6️⃣ Log PHI access
     await client.query(
@@ -311,9 +353,46 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
   }
 };
 
-/**
- * GET all reports for a specific doctor
- */
+/* ======================================================
+   5️⃣ PATIENT VIEWS OWN VERIFIED LAB REPORTS
+   ====================================================== */
+exports.getPatientLabReports = async (userId) => {
+  // Resolve patient_id from user_id
+  const patientRes = await pool.query(
+    `SELECT patient_id FROM patients WHERE user_id = $1`,
+    [userId]
+  );
+
+  if (patientRes.rowCount === 0) {
+    throw new Error("Patient record not found");
+  }
+
+  const patientId = patientRes.rows[0].patient_id;
+
+  const { rows } = await pool.query(
+    `
+    SELECT
+      lr.report_id,
+      lr.verified,
+      lr.verified_at,
+      lo.ordered_at,
+      COALESCE(lo.test_name, ltc.test_name) as test_name
+    FROM lab_reports lr
+    JOIN lab_orders lo ON lo.order_id = lr.order_id
+    LEFT JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
+    WHERE lo.patient_id = $1
+      AND lr.verified = true
+    ORDER BY lr.created_at DESC
+    `,
+    [patientId]
+  );
+
+  return rows;
+};
+
+/* ======================================================
+   6️⃣ DOCTOR VIEWS ASSIGNED LAB REPORTS
+   ====================================================== */
 exports.getDoctorLabReports = async (doctorId) => {
   const { rows } = await pool.query(
     `
@@ -322,17 +401,82 @@ exports.getDoctorLabReports = async (doctorId) => {
       lr.verified,
       lr.verified_at,
       lo.ordered_at,
-      ltc.test_name,
+      COALESCE(lo.test_name, ltc.test_name) as test_name,
       p.full_name_encrypted AS patient_name_encrypted,
       lo.patient_id
     FROM lab_reports lr
     JOIN lab_orders lo ON lo.order_id = lr.order_id
-    JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
+    LEFT JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
     JOIN patients p ON p.patient_id = lo.patient_id
     WHERE lo.doctor_id = $1
     ORDER BY lr.created_at DESC
     `,
     [doctorId]
+  );
+
+  return rows;
+};
+
+/* ======================================================
+   7️⃣ GET AVAILABLE LAB TESTS
+   ====================================================== */
+exports.getAllLabTests = async () => {
+  // Only select columns that actually exist
+  const { rows } = await pool.query(
+    `SELECT test_id, test_name, test_code FROM lab_test_catalog ORDER BY test_name`
+  );
+  return rows;
+};
+
+/* ======================================================
+   8️⃣ FIND OR CREATE TEST (Helper)
+   ====================================================== */
+exports.findOrCreateTest = async (testName) => {
+  // Normalize name
+  const name = testName.trim();
+
+  // Check existence
+  const existing = await pool.query(
+    `SELECT test_id FROM lab_test_catalog WHERE LOWER(test_name) = LOWER($1)`,
+    [name]
+  );
+
+  if (existing.rowCount > 0) {
+    return existing.rows[0].test_id;
+  }
+
+  // Create new
+  // Create a code from name (e.g. "Vitamin D" -> "VITAMIN_D")
+  const code = name.toUpperCase().replace(/[^A-Z0-9]/g, '_').substring(0, 50);
+
+  const newItem = await pool.query(
+    `INSERT INTO lab_test_catalog (test_name, test_code) VALUES ($1, $2) RETURNING test_id`,
+    [name, code]
+  );
+
+  return newItem.rows[0].test_id;
+};
+
+/* ======================================================
+   9️⃣ LAB TECH GETS PENDING ORDERS
+   ====================================================== */
+exports.getPendingLabOrders = async () => {
+  const { rows } = await pool.query(
+    `
+    SELECT
+      lo.order_id,
+      lo.ordered_at,
+      COALESCE(lo.test_name, ltc.test_name) as test_name,
+      lo.status,
+      lo.patient_id,
+      p.full_name_encrypted AS patient_name_encrypted,
+      lo.doctor_id
+    FROM lab_orders lo
+    LEFT JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
+    JOIN patients p ON p.patient_id = lo.patient_id
+    WHERE lo.status = 'ORDERED'
+    ORDER BY lo.ordered_at ASC
+    `
   );
 
   return rows;

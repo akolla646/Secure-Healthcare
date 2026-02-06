@@ -30,6 +30,7 @@ app.use("/vitals", vitalsRoutes);
 app.use("/auth", authRoutes);
 app.use("/patients", patientRoutes);
 app.use("/appointments", appointmentsRoutes);
+app.use("/doctors", require("./modules/doctors/doctors.routes"));
 
 // Health check
 app.get("/health", (req, res) => {

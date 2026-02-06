@@ -13,6 +13,12 @@ exports.isClinician = async (userId) => {
   return rowCount > 0;
 };
 
+exports.getPatientIdByUserId = async (userId) => {
+  const query = `SELECT patient_id FROM patients WHERE user_id = $1`;
+  const { rows } = await pool.query(query, [userId]);
+  return rows[0];
+};
+
 // Get appointment
 exports.getAppointment = async (appointmentId) => {
   const query = `
