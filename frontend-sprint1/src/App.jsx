@@ -9,6 +9,7 @@ import CarePlanReview from './pages/CarePlanReview';
 import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
 import AuditLogs from './pages/AuditLogs';
+import CDSSPage from './pages/CDSSPage';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -68,6 +69,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
                   <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cdss"
+              element={
+                <ProtectedRoute allowedRoles={['Patient', 'PATIENT']}>
+                  <CDSSPage />
                 </ProtectedRoute>
               }
             />

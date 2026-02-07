@@ -21,6 +21,7 @@ const prescriptionsRoutes = require("./modules/prescriptions/prescriptions.route
 const adminAuditRoutes = require("./routes/adminAuditRoutes");
 const labRoutes = require("./modules/labs/labs.routes");
 const adminUsersRoutes = require("./routes/adminUsers.routes");
+const carePlanRoutes = require("./modules/carePlan/carePlan.routes");
 
 app.use("/admin", adminUsersRoutes);
 app.use("/labs", labRoutes);
@@ -31,6 +32,7 @@ app.use("/auth", authRoutes);
 app.use("/patients", patientRoutes);
 app.use("/appointments", appointmentsRoutes);
 app.use("/doctors", require("./modules/doctors/doctors.routes"));
+app.use("/care-plan", carePlanRoutes);
 
 // Health check
 app.get("/health", (req, res) => {
