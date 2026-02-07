@@ -104,7 +104,7 @@ const Login = () => {
         setTimer(30);
         setError('');
         try {
-            const result = await resendOtp(email);
+            const result = await resendOtp(username);
             if (!result.success) {
                 setError(result.message);
             }
