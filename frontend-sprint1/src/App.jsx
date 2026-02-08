@@ -8,8 +8,8 @@ import PatientDiagnosis from './pages/PatientDiagnosis';
 import CarePlanReview from './pages/CarePlanReview';
 import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
+import DoctorAvailability from './pages/DoctorAvailability';
 import AuditLogs from './pages/AuditLogs';
-import CDSSPage from './pages/CDSSPage';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -65,18 +65,18 @@ function App() {
               }
             />
             <Route
-              path="/admin/logs"
+              path="/doctor/availability"
               element={
-                <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
-                  <AuditLogs />
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR']}>
+                  <DoctorAvailability />
                 </ProtectedRoute>
               }
             />
             <Route
-              path="/cdss"
+              path="/admin/logs"
               element={
-                <ProtectedRoute allowedRoles={['Patient', 'PATIENT']}>
-                  <CDSSPage />
+                <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
+                  <AuditLogs />
                 </ProtectedRoute>
               }
             />

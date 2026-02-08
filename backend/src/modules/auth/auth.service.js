@@ -63,10 +63,10 @@ exports.login = async (username, password) => {
         $1,
         $2,
         'LOGIN_MFA',
-        now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes'
+        $3
       )
       `,
-      [user.user_id, otpHash]
+      [user.user_id, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
     );
 
     // 🔒 EMAIL REDIRECTED FOR TESTING (email.js handles this)
@@ -89,7 +89,14 @@ exports.login = async (username, password) => {
  * PUBLIC REGISTER
  */
 exports.publicRegister = async (data) => {
-  const { email, password, role, full_name, dob, gender, blood_group } = data;
+  const { password, role, full_name, dob, gender, blood_group } = data;
+
+  // Normalize email to lowercase for consistent matching
+  const email = data.email ? data.email.trim().toLowerCase() : null;
+
+  if (!email) {
+    throw new Error("Email is required");
+  }
 
   // 🔒 SECURITY: Public registration is ONLY for Patients.
   // Doctors, Nurses, etc. must be created by Admin.
@@ -121,14 +128,14 @@ exports.publicRegister = async (data) => {
       full_name, dob, gender, blood_group
     )
     VALUES (
-      $1, $2, $3, $4, now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes',
+      $1, $2, $3, $4, $9,
       $5, $6, $7, $8
     )
     ON CONFLICT (email) DO UPDATE 
-    SET password_hash = $2, role = $3, otp_hash = $4, expires_at = now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes',
+    SET password_hash = $2, role = $3, otp_hash = $4, expires_at = $9,
         full_name = $5, dob = $6, gender = $7, blood_group = $8
     `,
-    [email, passwordHash, normalizedRole, otpHash, full_name, dob, gender, blood_group]
+    [email, passwordHash, normalizedRole, otpHash, full_name, dob, gender, blood_group, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
   );
 
   // 🔒 EMAIL REDIRECTED FOR TESTING
@@ -179,10 +186,53 @@ exports.verifyLoginOTP = async (username, otp) => {
 
 /**
  * RESEND OTP
+ * 
+ * Supports two scenarios:
+ * 1. Pending Registration - user in pending_registrations table
+ * 2. Existing User MFA - user in users table for login MFA
  */
-exports.resendOtp = async (identifier) => {
+exports.resendOtp = async (identifierInput) => {
+  // Normalize identifier to lowercase for case-insensitive matching
+  const identifier = identifierInput ? identifierInput.trim().toLowerCase() : null;
+
+  if (!identifier) {
+    throw new Error("Email or username is required");
+  }
+
+
+  // 1️⃣ First check if this is a pending registration
+  const pendingRes = await pool.query(
+    `SELECT * FROM pending_registrations WHERE LOWER(email) = $1`,
+    [identifier]
+  );
+
+  if (pendingRes.rowCount > 0) {
+    // This is a pending registration - resend activation OTP
+    const otp = generateOTP();
+    const otpHash = hashOTP(otp);
+
+    // Update the pending registration with new OTP (case-insensitive)
+    const updateResult = await pool.query(
+      `
+      UPDATE pending_registrations 
+      SET otp_hash = $1, 
+          expires_at = $3
+      WHERE LOWER(email) = $2
+      `,
+      [otpHash, identifier, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+    );
+
+
+    // Send OTP to the actual email from the pending record
+    const actualEmail = pendingRes.rows[0].email;
+    await sendOTPEmail(actualEmail, otp);
+
+    return { message: "OTP resent successfully" };
+  }
+
+  // 2️⃣ Fallback to existing user (login MFA)
   const { rows } = await pool.query(
-    `SELECT user_id, email, username FROM users WHERE username = $1 OR email = $1`,
+    `SELECT user_id, email, username FROM users WHERE LOWER(username) = $1 OR LOWER(email) = $1`,
     [identifier]
   );
 
@@ -197,12 +247,12 @@ exports.resendOtp = async (identifier) => {
   await pool.query(
     `
     INSERT INTO email_otps (user_id, otp_hash, purpose, expires_at)
-    VALUES ($1, $2, 'LOGIN_MFA', now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes')
+    VALUES ($1, $2, 'LOGIN_MFA', $3)
     `,
-    [user.user_id, otpHash]
+    [user.user_id, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
   );
 
-  // Send to email (fallback to username if email null, though unexpected for active users with MFA)
+  // Send to email (fallback to username if email null)
   await sendOTPEmail(user.email || user.username, otp);
 
   return { message: "OTP resent successfully" };
@@ -262,10 +312,10 @@ exports.adminCreateUser = async (email, role) => {
       $1,
       $2,
       'ACTIVATION',
-      now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes'
+      $3
     )
     `,
-    [userId, otpHash]
+    [userId, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
   );
 
   // 🔒 EMAIL REDIRECTED FOR TESTING
@@ -277,12 +327,20 @@ exports.adminCreateUser = async (email, role) => {
 /**
  * ACTIVATE USER ACCOUNT
  */
-exports.activateAccount = async (email, otp, password) => {
+exports.activateAccount = async (emailInput, otpInput, password) => {
+  // Normalize inputs - email to lowercase, OTP trimmed
+  const email = emailInput ? emailInput.trim().toLowerCase() : null;
+  const otp = otpInput ? otpInput.toString().trim() : null;
+
+  if (!email || !otp) {
+    throw new Error("Email and OTP are required");
+  }
+
   const otpHash = hashOTP(otp);
 
   // 1. Check PENDING REGISTRATIONS first
   const pendingRes = await pool.query(
-    `SELECT * FROM pending_registrations WHERE email = $1`,
+    `SELECT * FROM pending_registrations WHERE LOWER(email) = $1`,
     [email]
   );
 
@@ -290,8 +348,11 @@ exports.activateAccount = async (email, otp, password) => {
     const pendingUser = pendingRes.rows[0];
 
     // Verify OTP
-    if (pendingUser.otp_hash !== otpHash || new Date() > new Date(pendingUser.expires_at)) {
-      throw new Error("Invalid or expired OTP");
+    const isOtpMatch = pendingUser.otp_hash === otpHash;
+    const isExpired = new Date() > new Date(pendingUser.expires_at);
+
+    if (!isOtpMatch || isExpired) {
+      throw new Error(isExpired ? "OTP has expired. Please request a new one." : "Invalid OTP. Please check and try again.");
     }
 
     // Move to USERS table
@@ -457,10 +518,10 @@ exports.forgotPassword = async (email) => {
       $1,
       $2,
       'RESET_PASSWORD',
-      now() + interval '${process.env.OTP_EXPIRY_MINUTES} minutes'
+      $3
     )
     `,
-    [userId, otpHash]
+    [userId, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
   );
 
   // Determine email to send to:

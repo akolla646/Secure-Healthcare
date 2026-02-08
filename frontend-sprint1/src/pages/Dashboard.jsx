@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
-import { User, Activity, Calendar, ChevronRight, AlertTriangle, Beaker, FileCheck, CheckCircle, Loader2 } from 'lucide-react';
+import { User, Activity, Calendar, ChevronRight, AlertTriangle, Beaker, FileCheck, CheckCircle, Loader2, Clock } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import AdminDashboard from './dashboards/AdminDashboard';
 import PatientDashboard from './dashboards/PatientDashboard';
 import NurseDashboard from './dashboards/NurseDashboard';
 import LabTechDashboard from './dashboards/LabTechDashboard';
+import Modal from '../components/Modal';
 
 const Dashboard = () => {
     const { user } = useAuth();
@@ -16,6 +17,10 @@ const Dashboard = () => {
     const [labReports, setLabReports] = useState([]);
     const [verifyingId, setVerifyingId] = useState(null);
     const [reportMsg, setReportMsg] = useState(null);
+
+    // Diagnosis Modal State
+    const [diagnosisModal, setDiagnosisModal] = useState({ isOpen: false, reportId: null });
+    const [diagnosisText, setDiagnosisText] = useState("");
 
     const navigate = useNavigate();
 
@@ -74,11 +79,21 @@ const Dashboard = () => {
         }
     };
 
-    const handleVerifyReport = async (reportId) => {
+    const openVerifyModal = (reportId) => {
+        setDiagnosisModal({ isOpen: true, reportId });
+        setDiagnosisText("");
+    };
+
+    const handleVerifyReport = async () => {
+        const reportId = diagnosisModal.reportId;
+        if (!reportId) return;
+
         setVerifyingId(reportId);
         setReportMsg(null);
+        setDiagnosisModal({ isOpen: false, reportId: null }); // Close modal immediately
+
         try {
-            await api.patch(`/labs/reports/${reportId}/verify`);
+            await api.patch(`/labs/reports/${reportId}/verify`, { diagnosis: diagnosisText });
             setReportMsg({ type: 'success', text: 'Report verified and signed successfully.' });
             fetchLabReports(); // Refresh list
         } catch (err) {
@@ -101,6 +116,15 @@ const Dashboard = () => {
                     <h2 className="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
                         Doctor Dashboard
                     </h2>
+                </div>
+                <div className="mt-4 flex md:mt-0 md:ml-4">
+                    <Link
+                        to="/doctor/availability"
+                        className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        <Clock className="-ml-1 mr-2 h-5 w-5" />
+                        Manage Availability
+                    </Link>
                 </div>
             </div>
 
@@ -151,7 +175,7 @@ const Dashboard = () => {
                                     </div>
                                     <div>
                                         <button
-                                            onClick={() => handleVerifyReport(report.report_id)}
+                                            onClick={() => openVerifyModal(report.report_id)}
                                             disabled={verifyingId === report.report_id}
                                             className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                                         >
@@ -240,6 +264,45 @@ const Dashboard = () => {
                     </ul>
                 )}
             </div>
+            {/* Diagnosis Modal */}
+            <Modal
+                isOpen={diagnosisModal.isOpen}
+                onClose={() => setDiagnosisModal({ isOpen: false, reportId: null })}
+                title="Verify Lab Report & Add Diagnosis"
+            >
+                <div className="space-y-4">
+                    <p className="text-sm text-slate-600">
+                        Please review the lab results. You can add a diagnosis or comments before digitally signing this report.
+                    </p>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Diagnosis / Comments</label>
+                        <textarea
+                            className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            rows={4}
+                            placeholder="Enter diagnosis or interpretation of results..."
+                            value={diagnosisText}
+                            onChange={(e) => setDiagnosisText(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex justify-end space-x-3 pt-2">
+                        <button
+                            type="button"
+                            className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            onClick={() => setDiagnosisModal({ isOpen: false, reportId: null })}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center"
+                            onClick={handleVerifyReport}
+                        >
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Sign & Verify
+                        </button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

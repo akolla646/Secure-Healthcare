@@ -3,7 +3,7 @@
  * Core decision logic that applies clinical rules to generate care plans
  */
 
-const { getDiagnosisByCode, checkAllergyConflict, clinicalKnowledgeGraph } = require('../data/clinicalKnowledgeGraph');
+const { getDiagnosisByCode, checkAllergyConflict, clinicalKnowledgeGraph } = require('./clinicalKnowledgeGraph');
 const ExplainabilityEngine = require('./explainability');
 
 class RuleEngine {

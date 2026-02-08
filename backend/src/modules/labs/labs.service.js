@@ -101,7 +101,8 @@ exports.createLabReport = async (
 exports.verifyAndSignReport = async (
   reportId,
   doctorId,
-  doctorPrivateKey
+  doctorPrivateKey,
+  diagnosis
 ) => {
   const client = await pool.connect();
 
@@ -168,10 +169,11 @@ exports.verifyAndSignReport = async (
       SET doctor_signature = $1,
           verified = true,
           verified_at = NOW(),
-          verified_by = $2
+          verified_by = $2,
+          diagnosis = $4
       WHERE report_id = $3
       `,
-      [doctorSignature, doctorId, reportId]
+      [doctorSignature, doctorId, reportId, diagnosis ? encrypt(diagnosis) : null]
     );
 
     // 5️⃣ Audit Log
@@ -205,7 +207,7 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
   try {
     await client.query("BEGIN");
 
-    // 1️⃣ Fetch report + public keys
+    // 1️⃣ Fetch report + public keys + test_name
     const { rows } = await client.query(
       `
       SELECT 
@@ -214,16 +216,22 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
         lr.report_hash,
         lr.lab_tech_signature,
         lr.doctor_signature,
+        lr.diagnosis,
+
         lr.verified,
+        lr.verified_at,
 
         lo.doctor_id,
+        lo.ordered_at,
         p.user_id AS patient_user_id,
         lo.patient_id,
+        COALESCE(lo.test_name, ltc.test_name) as test_name,
         lab_key.public_key_pem AS lab_public_key,
         doc_key.public_key_pem AS doctor_public_key
       FROM lab_reports lr
       JOIN lab_orders lo ON lr.order_id = lo.order_id
       JOIN patients p ON lo.patient_id = p.patient_id
+      LEFT JOIN lab_test_catalog ltc ON ltc.test_id = lo.test_id
       JOIN user_public_keys lab_key ON lab_key.user_id = lo.lab_tech_id
       LEFT JOIN user_public_keys doc_key ON doc_key.user_id = lr.verified_by
       WHERE lr.report_id = $1
@@ -343,7 +351,11 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
     return {
       report_id: report.report_id,
       verified: report.verified,
-      result: decryptedResult
+      verified_at: report.verified_at,
+      ordered_at: report.ordered_at,
+      test_name: report.test_name,
+      result: decryptedResult,
+      diagnosis: report.diagnosis ? decrypt(report.diagnosis) : null
     };
   } catch (err) {
     await client.query("ROLLBACK");

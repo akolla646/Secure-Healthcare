@@ -62,6 +62,7 @@ router.post(
   attachLabPrivateKey,
   async (req, res) => {
     try {
+      console.log("📥 Uploading lab report. Body:", req.body);
       const { order_id, result_values } = req.body;
 
       if (!order_id || !result_values) {
@@ -72,6 +73,7 @@ router.post(
 
       // 🔐 must be attached by middleware
       const labPrivateKey = req.labPrivateKey;
+      console.log("🔑 Lab Private Key Present:", !!labPrivateKey);
 
       if (!labPrivateKey) {
         return res.status(500).json({
@@ -93,6 +95,7 @@ router.post(
         entity_id: result.report_id
       });
 
+      console.log("✅ Lab report uploaded successfully:", result.report_id);
       return res.status(201).json(result);
     } catch (err) {
       console.error("UPLOAD LAB REPORT ERROR →", err);
@@ -123,10 +126,13 @@ router.patch(
         });
       }
 
+      const { diagnosis } = req.body;
+
       const result = await labsController.verifyLabReport(
         reportId,
         req.user.user_id,
-        doctorPrivateKey
+        doctorPrivateKey,
+        diagnosis
       );
 
       await logAudit({

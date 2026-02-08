@@ -1,0 +1,45 @@
+user_id (uuid)
+created_at (timestamp without time zone)
+updated_at (timestamp without time zone)
+deleted_at (timestamp without time zone)
+mfa_enabled (boolean)
+is_active (boolean)
+is_locked (boolean)
+username (character varying)
+password_hash (text)
+email (character varying)
+
+Tables:
+audit_logs
+active_patients
+anonymized_data_log
+patients
+appointments
+care_plans
+data_retention_policies
+email_otps
+emergency_contacts
+lab_orders
+doctor_availability
+failed_login_attempts
+lab_test_catalog
+data_breach_logs
+lab_reports
+doctors
+ehr_records
+consent_categories
+medications
+pending_registrations
+sessions
+security_incidents
+user_roles
+password_history
+user_public_keys
+patient_consents
+phi_access_logs
+prescriptions
+permissions
+roles
+users
+vital_signs
+role_permissions

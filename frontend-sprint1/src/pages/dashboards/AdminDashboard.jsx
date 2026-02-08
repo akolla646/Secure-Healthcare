@@ -19,12 +19,20 @@ const AdminDashboard = () => {
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         username: "",
+        email: "",
         password: "",
         role: "PATIENT", // default
-        full_name: "", // for patient
+        full_name: "", // for patient/doctor
         dob: "",
         gender: "Male",
-        blood_group: "O+"
+        blood_group: "O+",
+        // Doctor fields
+        specialization: "",
+        qualification: "",
+        experience_years: 0,
+        department: "",
+        consultation_fee: 0,
+        phone_number: ""
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -96,8 +104,9 @@ const AdminDashboard = () => {
             });
             setShowModal(false);
             setFormData({
-                username: "", password: "", role: "PATIENT",
-                full_name: "", dob: "", gender: "Male", blood_group: "O+"
+                username: "", email: "", password: "", role: "PATIENT",
+                full_name: "", dob: "", gender: "Male", blood_group: "O+",
+                specialization: "", qualification: "", experience_years: 0, department: "", consultation_fee: 0, phone_number: ""
             });
             setSuccess("User created successfully");
             fetchDashboardData();
@@ -281,6 +290,10 @@ const AdminDashboard = () => {
                                     <input required name="username" value={formData.username} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
                                 <div className="mb-4">
+                                    <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                                    <input required type="email" name="email" value={formData.email} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                </div>
+                                <div className="mb-4">
                                     <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
                                     <input required type="password" name="password" value={formData.password} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                 </div>
@@ -291,9 +304,17 @@ const AdminDashboard = () => {
                                         <option value="DOCTOR">Doctor</option>
                                         <option value="ADMIN">Admin</option>
                                         <option value="LAB_TECH">Lab Tech</option>
-                                        <option value="NURSE">Nurse</option>
                                     </select>
                                 </div>
+                                {
+                                    /* 
+                                     * Conditional Rendering for Role-Specific Fields
+                                     * 
+                                     * PATIENT: Needs basic biodata (DOB, Gender, etc.)
+                                     * DOCTOR: Needs professional details (Specialization, License, Fees, etc.)
+                                     * LAB_TECH/ADMIN: Currently standard user fields only
+                                     */
+                                }
                                 {formData.role === 'PATIENT' && (
                                     <>
                                         <div className="mb-4">
@@ -303,6 +324,45 @@ const AdminDashboard = () => {
                                         <div className="mb-4">
                                             <label className="block text-gray-700 text-sm font-bold mb-2">DOB</label>
                                             <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                        </div>
+
+                                    </>
+                                )}
+                                {formData.role === 'DOCTOR' && (
+                                    <>
+                                        <div className="mb-4">
+                                            <label className="block text-gray-700 text-sm font-bold mb-2">Full Name</label>
+                                            <input required name="full_name" value={formData.full_name} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                        </div>
+                                        <div className="mb-4 grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Specialization</label>
+                                                <input required name="specialization" value={formData.specialization} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Department</label>
+                                                <input required name="department" value={formData.department} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
+                                        </div>
+                                        <div className="mb-4 grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Qualification</label>
+                                                <input required name="qualification" value={formData.qualification} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Experience (Years)</label>
+                                                <input required type="number" name="experience_years" value={formData.experience_years} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
+                                        </div>
+                                        <div className="mb-4 grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Consultation Fee</label>
+                                                <input required type="number" name="consultation_fee" value={formData.consultation_fee} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
+                                                <input name="phone_number" value={formData.phone_number} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                            </div>
                                         </div>
                                     </>
                                 )}
@@ -314,8 +374,9 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

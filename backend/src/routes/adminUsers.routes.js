@@ -1,44 +1,103 @@
+/**
+ * Admin User Management Routes
+ * 
+ * This module provides API endpoints for administrators to manage users in
+ * the system. Supports creating users with different roles, viewing all
+ * users, and deleting users.
+ * 
+ * All endpoints require ADMIN role for access.
+ * 
+ * Supported Roles: ADMIN, DOCTOR, LAB_TECH, PATIENT
+ * 
+ * @module routes/adminUsers
+ */
+
 "use strict";
 
+// Express framework
 const express = require("express");
 const router = express.Router();
+
+// Password hashing
 const bcrypt = require("bcryptjs");
+
+// Database connection pool
 const pool = require("../config/db");
+
+// Encryption for PII (patient names)
 const { encrypt } = require("../utils/encryption");
 
+// Authentication and authorization middleware
 const { authenticate } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
 
-/* ======================================================
-   ADMIN – CREATE USER
-   POST /admin/users
-   Roles: ADMIN, DOCTOR, LAB_TECH, PATIENT
-   ====================================================== */
+// =============================================================================
+// USER CREATION
+// =============================================================================
+
+/**
+ * Create New User
+ * POST /admin/users
+ * 
+ * Creates a new user with specified role. If role is PATIENT,
+ * also creates associated patient record.
+ * 
+ * Transaction Steps:
+ * 1. Validate required fields
+ * 2. Check username uniqueness
+ * 3. Hash password
+ * 4. Create user record
+ * 5. Assign role
+ * 6. Create domain record (patient only)
+ * 7. Log audit event
+ * 
+ * @requires Authentication - Valid JWT token required
+ * @requires Authorization - ADMIN role required
+ * 
+ * @body {string} username - Unique username
+ * @body {string} password - User's password
+ * @body {string} role - User role (ADMIN, DOCTOR, LAB_TECH, PATIENT)
+ * @body {string} [full_name] - Required for PATIENT role
+ * @body {string} [dob] - Required for PATIENT role
+ * @body {string} [gender] - Required for PATIENT role
+ * @body {string} [blood_group] - Required for PATIENT role
+ */
 router.post(
   "/users",
   authenticate,
   authorize("ADMIN"),
   async (req, res) => {
+    // Get database transaction client for atomic operations
     const client = await pool.connect();
 
     try {
       const {
         username,
+        email,
         password,
+
         role,
         full_name,
         dob,
         gender,
-        blood_group
+        blood_group,
+        // Doctor specific fields
+        specialization,
+        qualification,
+        experience_years,
+        department,
+        consultation_fee,
+        phone_number
       } = req.body;
 
-      // 🔴 Base validation
-      if (!username || !password || !role) {
+      // 🔴 Base validation - check required fields
+      if (!username || !email || !password || !role) {
         return res.status(400).json({
-          error: "username, password and role are required"
+          error: "username, email, password and role are required"
         });
       }
 
+      // Normalize input (lowercase username, uppercase role)
       const normalizedUsername = username.trim().toLowerCase();
       const normalizedRole = role.trim().toUpperCase();
 
@@ -48,6 +107,15 @@ router.post(
           return res.status(400).json({
             error:
               "full_name, dob, gender, blood_group are required for patient"
+          });
+        }
+      }
+
+      // 🔴 Doctor-specific validation
+      if (normalizedRole === "DOCTOR") {
+        if (!full_name || !specialization || !department || !consultation_fee) {
+          return res.status(400).json({
+            error: "full_name, specialization, department, consultation_fee are required for doctor"
           });
         }
       }
@@ -67,28 +135,30 @@ router.post(
         });
       }
 
-      // 2️⃣ Hash password
+      // 2️⃣ Hash password with bcrypt
       const passwordHash = await bcrypt.hash(password, 10);
 
-      // 3️⃣ Create user (auth table)
+      // 3️⃣ Create user record in users table
       const userResult = await client.query(
         `
         INSERT INTO users (
           username,
+          email,
           password_hash,
           is_active,
           is_locked,
-          created_at
+          created_at,
+          mfa_enabled // Enforce MFA by default for all new users
         )
-        VALUES ($1, $2, TRUE, FALSE, NOW())
+        VALUES ($1, $3, $2, TRUE, FALSE, NOW(), TRUE)
         RETURNING user_id
         `,
-        [normalizedUsername, passwordHash]
+        [normalizedUsername, passwordHash, email]
       );
 
       const userId = userResult.rows[0].user_id;
 
-      // 4️⃣ Resolve role
+      // 4️⃣ Resolve role_id from role name
       const roleResult = await client.query(
         "SELECT role_id FROM roles WHERE role_name = $1",
         [normalizedRole]
@@ -100,7 +170,7 @@ router.post(
 
       const roleId = roleResult.rows[0].role_id;
 
-      // 5️⃣ Assign role
+      // 5️⃣ Assign role to user
       await client.query(
         `
         INSERT INTO user_roles (user_id, role_id)
@@ -109,7 +179,7 @@ router.post(
         [userId, roleId]
       );
 
-      // 6️⃣ Create patient domain record (if PATIENT)
+      // 6️⃣ Create patient domain record (if PATIENT role)
       if (normalizedRole === "PATIENT") {
         await client.query(
           `
@@ -134,7 +204,7 @@ router.post(
           `,
           [
             userId,
-            encrypt(full_name),
+            encrypt(full_name),  // 🔐 Encrypt PII
             dob,
             gender,
             blood_group
@@ -142,7 +212,38 @@ router.post(
         );
       }
 
-      // 7️⃣ Audit log
+      // 6️⃣b Create doctor domain record (if DOCTOR role)
+      if (normalizedRole === "DOCTOR") {
+        await client.query(
+          `
+          INSERT INTO doctors (
+            user_id,
+            full_name,
+            specialization,
+            qualification,
+            experience_years,
+            department,
+            consultation_fee,
+            phone_number,
+            is_active,
+            created_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW())
+          `,
+          [
+            userId,
+            full_name,
+            specialization,
+            qualification,
+            experience_years || 0,
+            department,
+            consultation_fee,
+            phone_number
+          ]
+        );
+      }
+
+      // 7️⃣ Create audit log entry
       await client.query(
         `
         INSERT INTO audit_logs (
@@ -175,16 +276,28 @@ router.post(
   }
 );
 
-/* ======================================================
-   ADMIN – VIEW ALL USERS
-   GET /admin/users
-   ====================================================== */
+// =============================================================================
+// USER LISTING
+// =============================================================================
+
+/**
+ * Get All Users
+ * GET /admin/users
+ * 
+ * Returns a list of all users with their roles.
+ * 
+ * @requires Authentication - Valid JWT token required
+ * @requires Authorization - ADMIN role required
+ * 
+ * @returns {Array} List of users with user_id, username, is_active, created_at, role_name
+ */
 router.get(
   "/users",
   authenticate,
   authorize("ADMIN"),
   async (req, res) => {
     try {
+      // Join users with roles through user_roles table
       const result = await pool.query(`
         SELECT
           u.user_id,
@@ -208,10 +321,27 @@ router.get(
   }
 );
 
-/* ======================================================
-   ADMIN – DELETE USER
-   DELETE /admin/users/:id
-   ====================================================== */
+// =============================================================================
+// USER DELETION
+// =============================================================================
+
+/**
+ * Delete User
+ * DELETE /admin/users/:id
+ * 
+ * Deletes a user and their role assignments.
+ * Note: Currently performs hard delete. Consider soft delete (is_active=false)
+ * for production to preserve referential integrity.
+ * 
+ * @requires Authentication - Valid JWT token required
+ * @requires Authorization - ADMIN role required
+ * 
+ * @param {string} id - User UUID to delete (URL param)
+ * 
+ * @returns {Object} Success message
+ * @throws {404} If user not found
+ * @throws {400} If attempting to delete self
+ */
 router.delete(
   "/users/:id",
   authenticate,
@@ -234,28 +364,20 @@ router.delete(
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Prevent deleting self
+      // Prevent admin from deleting themselves
       if (req.user.user_id === id) {
         await client.query("ROLLBACK");
         return res.status(400).json({ error: "Cannot delete yourself" });
       }
 
-      // Delete from user_roles
+      // Delete role assignments first (foreign key constraint)
       await client.query("DELETE FROM user_roles WHERE user_id = $1", [id]);
 
-      // Delete from pending_registrations (if any link exists, but mostly separate)
-
-      // Delete from patients/doctors tables handled by FK cascade? 
-      // Assuming FKs are set to CASCADE or we need to delete manualy.
-      // Ideally we soft delete (is_active=false), but req implies DELETE.
-      // Let's Check schema if possible? 
-      // Safe bet: Delete from users table, let DB error if FK constraint.
-      // But typically we should handle dependent records.
-      // For now, simple DELETE from users.
-
+      // Delete the user
+      // Note: Dependent records (patients, doctors) may need cascade handling
       await client.query("DELETE FROM users WHERE user_id = $1", [id]);
 
-      // Audit Log
+      // Create audit log entry
       await client.query(
         `
         INSERT INTO audit_logs (

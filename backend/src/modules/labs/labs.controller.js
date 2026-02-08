@@ -60,12 +60,14 @@ exports.createLabReport = async (
 exports.verifyLabReport = async (
   reportId,
   doctorId,
-  doctorPrivateKey
+  doctorPrivateKey,
+  diagnosis
 ) => {
   return await labsService.verifyAndSignReport(
     reportId,
     doctorId,
-    doctorPrivateKey
+    doctorPrivateKey,
+    diagnosis
   );
 };
 
