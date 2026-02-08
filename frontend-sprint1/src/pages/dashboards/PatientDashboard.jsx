@@ -99,6 +99,11 @@ const PatientDashboard = () => {
             if (fullReport.verified) {
                 lines.push(``);
                 lines.push(`[VERIFIED] This report has been digitally signed by the doctor.`);
+                if (fullReport.diagnosis) {
+                    lines.push(``);
+                    lines.push(`DIAGNOSIS / DOCTOR'S COMMENTS:`);
+                    lines.push(fullReport.diagnosis);
+                }
             } else {
                 lines.push(``);
                 lines.push(`[PENDING VERIFICATION] results are preliminary.`);
@@ -352,8 +357,15 @@ const PatientDashboard = () => {
 
                         {selectedReport.result?.comments && (
                             <div>
-                                <h4 className="font-medium text-slate-900 border-b pb-1 mb-2">Comments</h4>
+                                <h4 className="font-medium text-slate-900 border-b pb-1 mb-2">Lab Tech Comments</h4>
                                 <p className="text-sm text-slate-600">{selectedReport.result.comments}</p>
+                            </div>
+                        )}
+
+                        {selectedReport.diagnosis && (
+                            <div className="bg-blue-50 p-4 rounded-md border border-blue-100">
+                                <h4 className="font-medium text-blue-900 border-b border-blue-200 pb-1 mb-2">Doctor's Diagnosis / Comments</h4>
+                                <p className="text-sm text-blue-800">{selectedReport.diagnosis}</p>
                             </div>
                         )}
 

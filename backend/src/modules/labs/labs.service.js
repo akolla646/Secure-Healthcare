@@ -101,7 +101,8 @@ exports.createLabReport = async (
 exports.verifyAndSignReport = async (
   reportId,
   doctorId,
-  doctorPrivateKey
+  doctorPrivateKey,
+  diagnosis
 ) => {
   const client = await pool.connect();
 
@@ -168,10 +169,11 @@ exports.verifyAndSignReport = async (
       SET doctor_signature = $1,
           verified = true,
           verified_at = NOW(),
-          verified_by = $2
+          verified_by = $2,
+          diagnosis = $4
       WHERE report_id = $3
       `,
-      [doctorSignature, doctorId, reportId]
+      [doctorSignature, doctorId, reportId, diagnosis ? encrypt(diagnosis) : null]
     );
 
     // 5️⃣ Audit Log
@@ -214,6 +216,8 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
         lr.report_hash,
         lr.lab_tech_signature,
         lr.doctor_signature,
+        lr.diagnosis,
+
         lr.verified,
         lr.verified_at,
 
@@ -350,7 +354,8 @@ exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
       verified_at: report.verified_at,
       ordered_at: report.ordered_at,
       test_name: report.test_name,
-      result: decryptedResult
+      result: decryptedResult,
+      diagnosis: report.diagnosis ? decrypt(report.diagnosis) : null
     };
   } catch (err) {
     await client.query("ROLLBACK");

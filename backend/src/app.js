@@ -23,8 +23,15 @@ const express = require("express");
 // CORS middleware for handling cross-origin requests from frontend
 const cors = require("cors");
 
-// Load environment variables from .env file
-require("dotenv").config();
+// Load environment variables from .env file (Robust path resolution)
+const path = require("path");
+const dotenvResult = require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+if (dotenvResult.error) {
+  console.error("❌ DOTENV ERROR:", dotenvResult.error);
+} else {
+  console.log("✅ DOTENV loaded. Keys:", Object.keys(dotenvResult.parsed || {}).join(", "));
+}
+console.log("Checking keys: LAB_PRIVATE_KEY is " + (process.env.LAB_PRIVATE_KEY ? "PRESENT" : "MISSING"));
 
 // =============================================================================
 // APPLICATION INITIALIZATION

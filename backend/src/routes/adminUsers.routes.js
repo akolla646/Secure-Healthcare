@@ -73,18 +73,27 @@ router.post(
     try {
       const {
         username,
+        email,
         password,
+
         role,
         full_name,
         dob,
         gender,
-        blood_group
+        blood_group,
+        // Doctor specific fields
+        specialization,
+        qualification,
+        experience_years,
+        department,
+        consultation_fee,
+        phone_number
       } = req.body;
 
       // 🔴 Base validation - check required fields
-      if (!username || !password || !role) {
+      if (!username || !email || !password || !role) {
         return res.status(400).json({
-          error: "username, password and role are required"
+          error: "username, email, password and role are required"
         });
       }
 
@@ -98,6 +107,15 @@ router.post(
           return res.status(400).json({
             error:
               "full_name, dob, gender, blood_group are required for patient"
+          });
+        }
+      }
+
+      // 🔴 Doctor-specific validation
+      if (normalizedRole === "DOCTOR") {
+        if (!full_name || !specialization || !department || !consultation_fee) {
+          return res.status(400).json({
+            error: "full_name, specialization, department, consultation_fee are required for doctor"
           });
         }
       }
@@ -125,15 +143,17 @@ router.post(
         `
         INSERT INTO users (
           username,
+          email,
           password_hash,
           is_active,
           is_locked,
-          created_at
+          created_at,
+          mfa_enabled // Enforce MFA by default for all new users
         )
-        VALUES ($1, $2, TRUE, FALSE, NOW())
+        VALUES ($1, $3, $2, TRUE, FALSE, NOW(), TRUE)
         RETURNING user_id
         `,
-        [normalizedUsername, passwordHash]
+        [normalizedUsername, passwordHash, email]
       );
 
       const userId = userResult.rows[0].user_id;
@@ -188,6 +208,37 @@ router.post(
             dob,
             gender,
             blood_group
+          ]
+        );
+      }
+
+      // 6️⃣b Create doctor domain record (if DOCTOR role)
+      if (normalizedRole === "DOCTOR") {
+        await client.query(
+          `
+          INSERT INTO doctors (
+            user_id,
+            full_name,
+            specialization,
+            qualification,
+            experience_years,
+            department,
+            consultation_fee,
+            phone_number,
+            is_active,
+            created_at
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW())
+          `,
+          [
+            userId,
+            full_name,
+            specialization,
+            qualification,
+            experience_years || 0,
+            department,
+            consultation_fee,
+            phone_number
           ]
         );
       }
