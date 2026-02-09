@@ -1,0 +1,55 @@
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import PatientDiagnosis from './pages/PatientDiagnosis';
+import CarePlanReview from './pages/CarePlanReview';
+import PatientCareView from './pages/PatientCareView';
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route
+              path="/patient/:id/diagnosis"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor']}>
+                  <PatientDiagnosis />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/:id/review-plan"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor']}>
+                  <CarePlanReview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/patient/:id/care-plan"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'Patient']}>
+                  <PatientCareView />
+                </ProtectedRoute>
+              }
+            />
+          </Route>
+
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+}
+
+export default App;
