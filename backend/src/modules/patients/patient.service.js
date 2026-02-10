@@ -36,6 +36,15 @@ const { encrypt } = require("../../utils/encryption");
  * - Auto-generates unique Medical Record Number (MRN)
  * - Automatically calculates is_minor flag from DOB
  * 
+ * Input:
+ * - data.full_name: string (Will be encrypted)
+ * - data.dob: string (YYYY-MM-DD)
+ * - data.gender: string
+ * - data.blood_group: string (Optional)
+ * 
+ * Output:
+ * - Object: Created patient record from DB (including generated keys like patient_id, mrn).
+ * 
  * @param {Object} data - Patient data
  * @param {string} [data.user_id] - Optional user ID to link (usually null)
  * @param {string} data.full_name - Patient's full name (will be encrypted)
@@ -101,6 +110,12 @@ async function createPatient(data) {
  * Retrieves all active (non-deleted) patients from the database.
  * Note: Names are returned encrypted and must be decrypted by controller.
  * 
+ * Input:
+ * - None
+ * 
+ * Output:
+ * - Array: List of patient objects with encrypted names.
+ * 
  * @returns {Array} Array of patient records (names still encrypted)
  */
 async function getAllPatients() {
@@ -141,6 +156,15 @@ async function getAllPatients() {
  * 2. Hash password with bcrypt
  * 3. Create user record
  * 4. Create patient record linked to user
+ * 
+ * Input:
+ * - data.username: string
+ * - data.password: string
+ * - data.full_name: string
+ * - data.dob: string
+ * 
+ * Output:
+ * - Object: Created patient record linked to the new user.
  * 
  * @param {Object} data - Registration data
  * @param {string} data.username - Unique username for login

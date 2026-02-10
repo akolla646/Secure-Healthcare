@@ -1,6 +1,0 @@
-roles: role_id (integer)
-user_roles: user_id (uuid)
-user_roles: role_id (integer)
-user_roles: expires_at (timestamp without time zone)
-roles: role_name (character varying)
-roles: role_description (text)

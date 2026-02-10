@@ -27,9 +27,16 @@ const logAudit = require("../../utils/auditLogger");
  * Creates a patient record that is not linked to a user account.
  * Used for manual data entry or legacy records.
  * 
+ * Input:
+ * - req.body.full_name: string (Required)
+ * - req.body.dob: string (YYYY-MM-DD, Required)
+ * - req.body.gender: string (Male/Female/Other, Required)
+ * - req.body.blood_group: string (Optional)
+ * 
+ * Output:
+ * - JSON object: Created patient record with decrypted name.
+ * 
  * @param {Object} req - Express request object
- * @param {Object} req.body - Patient data (full_name, dob, gender, blood_group)
- * @param {Object} req.user - Authenticated user (admin/doctor)
  * @param {Object} res - Express response object
  */
 async function createPatient(req, res) {
@@ -68,8 +75,13 @@ async function createPatient(req, res) {
  * Handles GET /patients/
  * Returns all active patients. Decrypts PII only for authorized roles.
  * 
+ * Input:
+ * - req.user.role: Used to determine if PII should be decrypted.
+ * 
+ * Output:
+ * - JSON Array: List of patient objects.
+ * 
  * @param {Object} req - Express request object
- * @param {Object} req.user - Authenticated user (for role-based decryption)
  * @param {Object} res - Express response object
  */
 async function getAll(req, res) {
@@ -113,9 +125,16 @@ async function getAll(req, res) {
  * Creates both a patient record and a linked user account.
  * This allows patients to log into the patient portal.
  * 
+ * Input:
+ * - req.body.username: string (Unique)
+ * - req.body.password: string (Will be hashed)
+ * - req.body.full_name: string
+ * - req.body.dob: string
+ * 
+ * Output:
+ * - JSON object: Created patient record.
+ * 
  * @param {Object} req - Express request object
- * @param {Object} req.body - Patient data with username/password
- * @param {Object} req.user - Authenticated user (admin/doctor)
  * @param {Object} res - Express response object
  */
 async function registerPatientWithUser(req, res) {
