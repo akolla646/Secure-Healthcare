@@ -157,10 +157,4 @@ npm start
 
 ---
 
-## 🤝 Contributors
-
-*   **Student Team** - *SDE Project Sprint 1*
-
----
-
 > This project is for educational purposes.
