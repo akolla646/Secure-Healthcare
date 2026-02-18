@@ -11,7 +11,8 @@ import {
     Settings,
     LogOut,
     Menu,
-    X
+    X,
+    ScanLine
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -25,10 +26,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: 'Patient Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'My Patients', path: '/patients', icon: Users }, // Placeholder
             { name: 'Diagnosis & EHR', path: '/ehr', icon: Stethoscope }, // Placeholder
+            { name: 'Rx Scanner (OCR)', path: '/prescription-ocr', icon: ScanLine },
         ],
         Patient: [
             { name: 'My Health Summary', path: '/dashboard', icon: Activity },
             { name: 'My Care Plan', path: `/patient/${user?.sub}/care-plan`, icon: ClipboardList },
+            { name: 'Rx Scanner (OCR)', path: '/prescription-ocr', icon: ScanLine },
             { name: 'Appointments', path: '/appointments', icon: FileText }, // Placeholder
         ],
         Admin: [

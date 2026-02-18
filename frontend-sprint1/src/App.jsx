@@ -10,6 +10,7 @@ import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
 import DoctorAvailability from './pages/DoctorAvailability';
 import AuditLogs from './pages/AuditLogs';
+import PrescriptionOCR from './pages/PrescriptionOCR';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -77,6 +78,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
                   <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prescription-ocr"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                  <PrescriptionOCR />
                 </ProtectedRoute>
               }
             />
