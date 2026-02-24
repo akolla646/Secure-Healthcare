@@ -36,6 +36,7 @@ async function publicRegister(req, res) {
   const { email, password, name, role, dob, gender, blood_group } = req.body;
 
   try {
+    console.log("Register Body:", req.body);
     // We pass 'name' as 'full_name' to service
     await authService.publicRegister({
       email,
@@ -52,7 +53,11 @@ async function publicRegister(req, res) {
     });
 
   } catch (err) {
-    return res.status(400).json({ error: err.message });
+    console.error("Register Error Full:", err); // ADDED THIS LINE
+    return res.status(400).json({
+      error: err.message || "Unknown error",
+      rawError: JSON.stringify(err, Object.getOwnPropertyNames(err))
+    });
   }
 }
 

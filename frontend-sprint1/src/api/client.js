@@ -46,4 +46,7 @@ export const registerUser = (userData) => api.post('/auth/register', userData); 
 export const loginUser = (credentials) => api.post('/auth/login', { username: credentials.username, password: credentials.password });
 export const activateAccount = (data) => api.post('/auth/activate', { email: data.email, otp: data.otp, password: data.password }); // Replaces verifyOtp for Register
 
+// Payment Endpoints
+export const createCheckoutSession = (data) => api.post('/payments/create-checkout-session', data);
+
 export default api;

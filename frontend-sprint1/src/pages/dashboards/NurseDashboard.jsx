@@ -1,9 +1,22 @@
+/**
+ * Nurse Dashboard Component
+ * 
+ * Interface for Nurses to monitor patient status and daily tasks.
+ * Currently serves as a visual prototype/mockup demonstrating potential features:
+ * - Patient Assignments
+ * - Critical Alerts
+ * - Shift Management
+ * - Rounds Checklist
+ */
+
 import { ClipboardList, Activity, Clock, UserCheck } from 'lucide-react';
 
 const NurseDashboard = () => {
     return (
         <div className="space-y-6">
+            {/* Status Overview Cards */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {/* Assigned Patients Count */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5 flex items-center">
                         <div className="flex-shrink-0 bg-blue-100 rounded-md p-3">
@@ -18,6 +31,7 @@ const NurseDashboard = () => {
                     </div>
                 </div>
 
+                {/* Critical Alerts Count */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5 flex items-center">
                         <div className="flex-shrink-0 bg-red-100 rounded-md p-3">
@@ -32,6 +46,7 @@ const NurseDashboard = () => {
                     </div>
                 </div>
 
+                {/* Rounds Progress */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5 flex items-center">
                         <div className="flex-shrink-0 bg-green-100 rounded-md p-3">
@@ -46,6 +61,7 @@ const NurseDashboard = () => {
                     </div>
                 </div>
 
+                {/* Shift Time Remaining */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5 flex items-center">
                         <div className="flex-shrink-0 bg-yellow-100 rounded-md p-3">
@@ -61,7 +77,7 @@ const NurseDashboard = () => {
                 </div>
             </div>
 
-            {/* Tasks / Rounds */}
+            {/* Upcoming Tasks List (Mock Data) */}
             <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:px-6 border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Upcoming Rounds / Meds</h3>

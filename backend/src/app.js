@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * Express Application Configuration
  * 
@@ -146,4 +147,76 @@ app.use((err, req, res, next) => {
 });
 
 // Export the configured Express app for use in server.js
+=======
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+// Import routes
+const authRoutes = require('./modules/auth/auth.routes');
+const patientRoutes = require('./modules/patients/patient.routes');
+const doctorRoutes = require('./modules/doctors/doctors.routes');
+const appointmentRoutes = require('./modules/appointments/appointments.routes');
+const prescriptionRoutes = require('./modules/prescriptions/prescriptions.routes');
+const labRoutes = require('./modules/labs/labs.routes');
+const vitalsRoutes = require('./modules/vitals/vitals.routes');
+const cdssRoutes = require('./modules/cdss/cdss.routes');
+const adminUsersRoutes = require('./routes/adminUsers.routes');
+const adminAuditRoutes = require('./routes/adminAuditRoutes');
+const paymentRoutes = require('./modules/payments/payment.routes');
+
+const app = express();
+
+// Middleware
+app.use(cors());
+
+// Webhook route must be parsed as raw JSON, so we define it BEFORE the general json middleware
+// OR we can rely on route-specific parsing if defined in payment.routes.js
+// But usually extensive middleware like express.json() consumes the stream.
+// To satisfy Stripe signature verification, we often use a custom verify function in express.json
+// or route specific middleware. The route file uses express.raw() which is good.
+// However, global express.json() might interfere if it runs first on the same path.
+// Let's keep global middleware but ensure webhook route is handled correctly.
+// Since we mount routes later, global middleware runs first.
+// We need to exclude /api/payments/webhook from global express.json if possible,
+// or use a valid approach.
+// Easier approach: Use a middleware that restricts JSON parsing to non-webhook routes.
+
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/payments/webhook') {
+        next();
+    } else {
+        express.json()(req, res, next);
+    }
+});
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static files if needed
+// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/labs', labRoutes);
+app.use('/api/vitals', vitalsRoutes);
+app.use('/api/cdss', cdssRoutes);
+app.use('/api/admin/users', adminUsersRoutes);
+app.use('/api/admin/audit-logs', adminAuditRoutes);
+app.use('/api/payments', paymentRoutes);
+
+// Health check
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', message: 'Backend is running' });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!', details: err.message });
+});
+
+>>>>>>> 946053a (feat: integrate Stripe payment and payment status tracking)
 module.exports = app;

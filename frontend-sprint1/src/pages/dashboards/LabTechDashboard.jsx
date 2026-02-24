@@ -1,19 +1,36 @@
+/**
+ * Lab Technician Dashboard Component
+ * 
+ * Interface for Lab Technicians to manage and fulfill lab test orders.
+ * Features:
+ * - View list of pending lab orders
+ * - Select an order to upload results
+ * - Submit results (currently plain text) to the system
+ * - Visual status indicators
+ */
+
 import React, { useState, useEffect } from 'react';
 import api from '../../api/client';
 import { FileText, Clock, User, CheckCircle, Loader2 } from 'lucide-react';
 
 const LabTechDashboard = () => {
+    // State for orders list and UI interaction
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [resultValues, setResultValues] = useState('');
-    const [isUploading, setIsUploading] = useState(false);
+
+    // State for Result Uploading
+    const [selectedOrder, setSelectedOrder] = useState(null); // The order currently being processed
+    const [resultValues, setResultValues] = useState('');     // Content of the result (text)
+    const [isUploading, setIsUploading] = useState(false);    // Upload loading state
 
     useEffect(() => {
         fetchOrders();
     }, []);
 
+    /**
+     * Fetches all pending lab orders from the backend.
+     */
     const fetchOrders = async () => {
         try {
             const response = await api.get('/labs/pending-orders');
@@ -26,11 +43,18 @@ const LabTechDashboard = () => {
         }
     };
 
+    /**
+     * Opens the upload modal for a specific order.
+     */
     const handleUploadDefault = (order) => {
         setSelectedOrder(order);
-        setResultValues('');
+        setResultValues(''); // Reset previous input
     };
 
+    /**
+     * Submits the lab result to the backend.
+     * Updates the order status to 'COMPLETED'.
+     */
     const submitUpload = async (e) => {
         e.preventDefault();
         if (!resultValues.trim()) return;
@@ -42,9 +66,9 @@ const LabTechDashboard = () => {
                 result_values: resultValues
             });
 
-            // Success
+            // On success: close modal and refresh list
             setSelectedOrder(null);
-            fetchOrders(); // Refresh list
+            fetchOrders();
         } catch (err) {
             console.error("Upload failed", err);
             alert("Failed to upload report: " + (err.response?.data?.error || err.message));
@@ -71,6 +95,7 @@ const LabTechDashboard = () => {
 
     return (
         <div className="space-y-6 relative">
+            {/* Header */}
             <div className="md:flex md:items-center md:justify-between">
                 <div className="flex-1 min-w-0">
                     <h2 className="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
@@ -79,6 +104,7 @@ const LabTechDashboard = () => {
                 </div>
             </div>
 
+            {/* Pending Orders List */}
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <div className="bg-white px-4 py-5 border-b border-slate-200 sm:px-6 flex justify-between items-center">
                     <h3 className="text-lg leading-6 font-medium text-slate-900 flex items-center">
@@ -140,7 +166,7 @@ const LabTechDashboard = () => {
                 </ul>
             </div>
 
-            {/* Upload Modal */}
+            {/* Results Upload Modal */}
             {selectedOrder && (
                 <div className="fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                     <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

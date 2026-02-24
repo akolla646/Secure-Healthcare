@@ -147,26 +147,25 @@ const BookAppointment = () => {
         // Simple 30 min duration
         // logic to add 30 mins to time string
         const [h, m] = time.split(':').map(Number);
-        const dateObj = new Date(date);
-        dateObj.setHours(h, m + 30);
-        // Return ISO string or similar? backend expects ISO mostly?
-        // Service expects: scheduled_end
-        // Service code: const start = new Date(scheduled_start); const end = new Date(scheduled_end);
-        // So ISO string works better.
-
-        const startObj = new Date(`${date}T${time}:00`);
-        const endObj = new Date(startObj.getTime() + 30 * 60000);
+        const safeTimeStr = `${date}T${time}:00`;
 
         // Format to ISO string but local time consideration might be tricky without timezone.
         // Let's send what Date.toISOString/toLocaleString returns or simplistic format
         // The backend slices: scheduled_start.slice(11, 19). It expects standard ISO-like string.
+        // Prevent local timezone shifting by constructing the string directly
+        const startString = `${date}T${time}:00`;
 
-        // Helper to format: YYYY-MM-DDTHH:mm:ss
-        const format = (d) => {
-            const pad = (n) => n.toString().padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-        };
-        return format(endObj);
+        // Calculate end string (add 30 mins)
+        let endH = h;
+        let endM = m + 30;
+        if (endM >= 60) {
+            endH += 1;
+            endM -= 60;
+        }
+        const pad = (n) => n.toString().padStart(2, '0');
+        const endString = `${date}T${pad(endH)}:${pad(endM)}:00`;
+
+        return endString;
     };
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-teal-600"><div className="animate-spin text-4xl">⟳</div></div>;

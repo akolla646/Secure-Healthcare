@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  * Database Configuration Module
  * 
@@ -43,3 +44,17 @@ pool.connect()
 
 // Export the pool for use in other modules (repositories, services)
 module.exports = pool;
+=======
+const { Pool } = require("pg");
+const path = require('path');
+require("dotenv").config({ path: path.join(__dirname, '../../.env') });
+
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false,
+    },
+});
+
+module.exports = pool;
+>>>>>>> 946053a (feat: integrate Stripe payment and payment status tracking)
