@@ -5,6 +5,9 @@ const { generateOTP, hashOTP } = require("../../utils/otp");
 const { sendOTPEmail } = require("../../utils/email");
 const patientService = require("../patients/patient.service");
 
+// Safe OTP expiry: defaults to 10 minutes if OTP_EXPIRY_MINUTES is not set
+const otpExpiryMs = () => Date.now() + (parseInt(process.env.OTP_EXPIRY_MINUTES) || 10) * 60000;
+
 
 /**
  * LOGIN – STEP 1 (Password check)
@@ -66,7 +69,7 @@ exports.login = async (username, password) => {
         $3
       )
       `,
-      [user.user_id, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+      [user.user_id, otpHash, new Date(otpExpiryMs())]
     );
 
     // 🔒 EMAIL REDIRECTED FOR TESTING (email.js handles this)
@@ -135,7 +138,7 @@ exports.publicRegister = async (data) => {
     SET password_hash = $2, role = $3, otp_hash = $4, expires_at = $9,
         full_name = $5, dob = $6, gender = $7, blood_group = $8
     `,
-    [email, passwordHash, normalizedRole, otpHash, full_name, dob, gender, blood_group, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+    [email, passwordHash, normalizedRole, otpHash, full_name, dob, gender, blood_group, new Date(otpExpiryMs())]
   );
 
   // 🔒 EMAIL REDIRECTED FOR TESTING
@@ -219,7 +222,7 @@ exports.resendOtp = async (identifierInput) => {
           expires_at = $3
       WHERE LOWER(email) = $2
       `,
-      [otpHash, identifier, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+      [otpHash, identifier, new Date(otpExpiryMs())]
     );
 
 
@@ -249,7 +252,7 @@ exports.resendOtp = async (identifierInput) => {
     INSERT INTO email_otps (user_id, otp_hash, purpose, expires_at)
     VALUES ($1, $2, 'LOGIN_MFA', $3)
     `,
-    [user.user_id, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+    [user.user_id, otpHash, new Date(otpExpiryMs())]
   );
 
   // Send to email (fallback to username if email null)
@@ -315,7 +318,7 @@ exports.adminCreateUser = async (email, role) => {
       $3
     )
     `,
-    [userId, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+    [userId, otpHash, new Date(otpExpiryMs())]
   );
 
   // 🔒 EMAIL REDIRECTED FOR TESTING
@@ -521,7 +524,7 @@ exports.forgotPassword = async (email) => {
       $3
     )
     `,
-    [userId, otpHash, new Date(Date.now() + process.env.OTP_EXPIRY_MINUTES * 60000)]
+    [userId, otpHash, new Date(otpExpiryMs())]
   );
 
   // Determine email to send to:

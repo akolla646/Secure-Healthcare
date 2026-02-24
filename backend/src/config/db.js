@@ -21,11 +21,13 @@ const { Pool } = require("pg");
  * - connectionString: The full database connection URL from .env
  * - ssl.rejectUnauthorized: Set to false for Neon serverless PostgreSQL compatibility
  */
+// Only use SSL for remote/cloud databases (e.g. Neon), not for local PostgreSQL
+const isLocal = (process.env.DATABASE_URL || "").includes("localhost") ||
+    (process.env.DATABASE_URL || "").includes("127.0.0.1");
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false, // Required for Neon serverless PostgreSQL - allows self-signed certificates
-    },
+    ssl: isLocal ? false : { rejectUnauthorized: false },
 });
 
 /**

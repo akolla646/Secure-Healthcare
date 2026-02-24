@@ -28,6 +28,11 @@ const PrescriptionOCR = () => {
     const fileInputRef = useRef(null);
     const API_BASE = '/api';
 
+    // Helper: get auth token from localStorage
+    const getAuthHeaders = () => ({
+        Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+    });
+
     // Upload state
     const [dragActive, setDragActive] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -135,6 +140,7 @@ const PrescriptionOCR = () => {
 
             const response = await fetch(`${API_BASE}/ocr/upload-prescription`, {
                 method: 'POST',
+                headers: getAuthHeaders(),
                 body: formData,
             });
 
@@ -175,7 +181,7 @@ const PrescriptionOCR = () => {
         try {
             const response = await fetch(`${API_BASE}/ocr/generate-plan-from-prescription`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify({
                     diagnosisCode: selectedDiagnosisCode,
                     patientId: ocrResult?.patientInfo?.id,
@@ -457,8 +463,8 @@ const PrescriptionOCR = () => {
                                             key={tab.id}
                                             onClick={() => setActiveTab(tab.id)}
                                             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-lg text-sm font-medium transition-all ${activeTab === tab.id
-                                                    ? 'bg-gradient-to-r from-purple-600/80 to-teal-600/80 text-white shadow-lg'
-                                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                                ? 'bg-gradient-to-r from-purple-600/80 to-teal-600/80 text-white shadow-lg'
+                                                : 'text-slate-400 hover:text-white hover:bg-white/5'
                                                 }`}
                                         >
                                             <tab.icon className="h-4 w-4" />
@@ -547,8 +553,8 @@ const PrescriptionOCR = () => {
                                                                     <h4 className="font-semibold text-white">{med.name}</h4>
                                                                 </div>
                                                                 <span className={`text-xs px-2 py-0.5 rounded-full ${med.confidence === 'high'
-                                                                        ? 'bg-emerald-500/20 text-emerald-400'
-                                                                        : 'bg-amber-500/20 text-amber-400'
+                                                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                                                    : 'bg-amber-500/20 text-amber-400'
                                                                     }`}>
                                                                     {med.confidence} confidence
                                                                 </span>
