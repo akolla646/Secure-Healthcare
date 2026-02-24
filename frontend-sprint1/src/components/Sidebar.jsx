@@ -23,6 +23,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = {
         Doctor: [
             { name: 'Patient Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: 'Vitals Dashboard', path: '/vitals-dashboard', icon: Activity },
             { name: 'My Patients', path: '/patients', icon: Users }, // Placeholder
             { name: 'Diagnosis & EHR', path: '/ehr', icon: Stethoscope }, // Placeholder
         ],
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ],
         Nurse: [
             { name: 'Ward Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: 'Vitals Dashboard', path: '/vitals-dashboard', icon: Activity },
             { name: 'Vitals Monitoring', path: '/nurse/vitals', icon: Activity },
         ],
         Staff: [
