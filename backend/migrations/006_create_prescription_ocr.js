@@ -1,3 +1,11 @@
+/**
+ * Migration: Create prescription_ocr table
+ *
+ * Stores OCR extraction results from prescription images.
+ * Includes raw text, cleaned text, extracted medications,
+ * diagnosis codes, and patient information.
+ */
+
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const pool = require('../src/config/db');
@@ -5,8 +13,9 @@ const pool = require('../src/config/db');
 async function migrate() {
     const client = await pool.connect();
     try {
-        console.log('Starting migration: Create prescription_ocr table');
+        console.log('🔄 Starting migration: Create prescription_ocr table');
         await client.query('BEGIN');
+
         await client.query(`
             CREATE TABLE IF NOT EXISTS prescription_ocr (
                 id SERIAL PRIMARY KEY,
@@ -22,13 +31,23 @@ async function migrate() {
                 updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
         `);
-        await client.query(`CREATE INDEX IF NOT EXISTS idx_prescription_ocr_created_at ON prescription_ocr (created_at DESC);`);
-        await client.query(`CREATE INDEX IF NOT EXISTS idx_prescription_ocr_quality ON prescription_ocr (quality);`);
+
+        // Create indexes for faster lookups
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_prescription_ocr_created_at 
+            ON prescription_ocr (created_at DESC);
+        `);
+
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_prescription_ocr_quality 
+            ON prescription_ocr (quality);
+        `);
+
         await client.query('COMMIT');
-        console.log('prescription_ocr table created successfully!');
+        console.log('✅ prescription_ocr table created successfully!');
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('Migration failed:', err.message);
+        console.error('❌ Migration failed:', err.message);
     } finally {
         client.release();
         pool.end();

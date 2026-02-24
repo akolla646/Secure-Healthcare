@@ -1,10 +1,32 @@
+/**
+ * OCR Controller
+ *
+ * Handles HTTP request/response for prescription image OCR operations.
+ * Supports image upload, OCR extraction, text cleaning, and integration
+ * with the CDSS/AI module for care plan generation from prescriptions.
+ *
+ * @module modules/ocr/controller
+ */
+
 const ocrService = require('./ocr.service');
 const { getDiagnosisByCode } = require('../cdss/clinicalKnowledgeGraph');
 const RuleEngine = require('../cdss/ruleEngine');
 const pool = require('../../config/db');
 
+// Initialize Rule Engine for AI integration
 const ruleEngine = new RuleEngine();
 
+// ============================================================================
+// IMAGE UPLOAD & OCR EXTRACTION
+// ============================================================================
+
+/**
+ * Upload prescription image and extract text via OCR
+ * POST /ocr/upload-prescription
+ *
+ * Accepts an image file, runs Tesseract OCR, cleans the text,
+ * and returns structured prescription data.
+ */
 exports.uploadPrescription = async (req, res) => {
     try {
         if (!req.file) {
@@ -14,6 +36,7 @@ exports.uploadPrescription = async (req, res) => {
             });
         }
 
+        // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/bmp', 'image/tiff'];
         if (!allowedTypes.includes(req.file.mimetype)) {
             return res.status(400).json({
@@ -24,11 +47,13 @@ exports.uploadPrescription = async (req, res) => {
 
         console.log(`📸 Prescription image received: ${req.file.originalname} (${(req.file.size / 1024).toFixed(1)} KB)`);
 
+        // Run the full OCR pipeline
         const result = await ocrService.processPrescriptionImage(
             req.file.buffer,
             req.file.mimetype
         );
 
+        // Store in database if we have enough quality data
         let savedId = null;
         if (result.cleaned.quality !== 'poor') {
             try {
@@ -51,6 +76,7 @@ exports.uploadPrescription = async (req, res) => {
                 savedId = insertResult.rows[0].id;
                 console.log(`💾 OCR result saved with ID: ${savedId}`);
             } catch (dbErr) {
+                // Don't fail the request if DB save fails - just log it
                 console.warn('⚠️ Could not save OCR result to database:', dbErr.message);
             }
         }
@@ -84,6 +110,18 @@ exports.uploadPrescription = async (req, res) => {
     }
 };
 
+// ============================================================================
+// AI INTEGRATION — Generate care plan from OCR-extracted prescription
+// ============================================================================
+
+/**
+ * Generate care plan from OCR-extracted prescription data
+ * POST /ocr/generate-plan-from-prescription
+ *
+ * Takes the extracted medications and diagnosis codes from OCR
+ * and feeds them into the CDSS rule engine to generate
+ * a personalized care plan.
+ */
 exports.generatePlanFromPrescription = async (req, res) => {
     try {
         const { diagnosisCode, patientId, patientName, medications } = req.body;
@@ -95,6 +133,7 @@ exports.generatePlanFromPrescription = async (req, res) => {
             });
         }
 
+        // Verify diagnosis code exists in our knowledge graph
         const diagnosisData = getDiagnosisByCode(diagnosisCode);
         if (!diagnosisData) {
             return res.status(400).json({
@@ -103,6 +142,7 @@ exports.generatePlanFromPrescription = async (req, res) => {
             });
         }
 
+        // Build patient context including OCR-extracted medications
         const patientContext = {
             id: patientId || 'OCR_PATIENT',
             name: patientName || 'Patient',
@@ -112,6 +152,7 @@ exports.generatePlanFromPrescription = async (req, res) => {
             currentMedications: medications || [],
         };
 
+        // If patientId given, try to fetch real data
         if (patientId) {
             try {
                 const patientRes = await pool.query(
@@ -126,9 +167,11 @@ exports.generatePlanFromPrescription = async (req, res) => {
             }
         }
 
+        // Generate care plan using the CDSS rule engine
         const result = ruleEngine.generateCarePlan(patientContext, diagnosisCode);
 
         if (result.success) {
+            // Enhance care plan with OCR-extracted medication context
             result.carePlan.prescriptionSource = 'OCR';
             result.carePlan.extractedMedications = medications || [];
 
@@ -153,6 +196,14 @@ exports.generatePlanFromPrescription = async (req, res) => {
     }
 };
 
+// ============================================================================
+// FETCH OCR HISTORY
+// ============================================================================
+
+/**
+ * Get OCR extraction history
+ * GET /ocr/history
+ */
 exports.getHistory = async (req, res) => {
     try {
         const result = await pool.query(
@@ -184,6 +235,10 @@ exports.getHistory = async (req, res) => {
     }
 };
 
+/**
+ * Get a specific OCR result by ID
+ * GET /ocr/:id
+ */
 exports.getById = async (req, res) => {
     try {
         const { id } = req.params;
