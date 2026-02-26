@@ -11,7 +11,7 @@ const {
 const { logAudit } = require("../../utils/auditLogger");
 
 /* ======================================================
-   1️⃣ LAB TECH CREATES LAB REPORT
+   LAB TECH CREATES LAB REPORT
    (Doctor must have ordered test first)
    ====================================================== */
 exports.createLabReport = async (
@@ -25,7 +25,7 @@ exports.createLabReport = async (
   try {
     await client.query("BEGIN");
 
-    // 🔎 Ensure lab order exists & is ORDERED
+    // Ensure lab order exists & is ORDERED
     const orderRes = await client.query(
       `
       SELECT status
@@ -43,16 +43,16 @@ exports.createLabReport = async (
       throw new Error("Lab report already uploaded or invalid state");
     }
 
-    // 1️⃣ Encrypt result (ALWAYS stringify)
+    //  Encrypt result (ALWAYS stringify)
     const encryptedString = encrypt(JSON.stringify(resultValues));
 
-    // 2️⃣ Hash encrypted result
+    //  Hash encrypted result
     const reportHash = hashData(encryptedString);
 
-    // 3️⃣ Lab technician signs hash
+    //  Lab technician signs hash
     const labSignature = signHash(reportHash, labPrivateKey);
 
-    // 4️⃣ Store lab report
+    //  Store lab report
     // Store encrypted string directly (column is TEXT)
     const reportRes = await client.query(
       `

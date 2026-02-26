@@ -3,7 +3,7 @@
 const authService = require("./auth.service");
 const { logAudit } = require("../../utils/auditLogger");
 const { generateRSAKeyPair } = require("../../utils/keypair");
-const pool = require("../../config/db"); // ✅ FIXED PATH
+const pool = require("../../config/db");
 
 /**
  * GENERATE RSA KEYS
@@ -130,7 +130,7 @@ async function resendOtp(req, res) {
     await authService.resendOtp(identifier);
 
     await logAudit({
-      actor_user_id: null, // We might not know the ID yet securely, or could look it up.
+      actor_user_id: null,
       action: "RESEND_OTP",
       entity_type: "SYSTEM",
       entity_id: null
@@ -195,7 +195,6 @@ async function activateAccount(req, res) {
   const { email, otp, password } = req.body;
 
   try {
-    // ✅ FIXED: service method name
     const result = await authService.activateAccount(email, otp, password);
 
     await logAudit({
@@ -218,15 +217,15 @@ async function activateAccount(req, res) {
  * FORGOT PASSWORD
  */
 async function forgotPassword(req, res) {
-  const { email } = req.body;
+  const { username } = req.body;
 
   try {
-    await authService.forgotPassword(email);
+    await authService.forgotPassword(username);
 
     await logAudit({
       actor_user_id: null,
       action: "FORGOT_PASSWORD_REQUEST",
-      entity_type: "USER",
+      entity_type: "SYSTEM",
       entity_id: null
     });
 
@@ -251,7 +250,7 @@ async function resetPassword(req, res) {
     await logAudit({
       actor_user_id: null,
       action: "PASSWORD_RESET_SUCCESS",
-      entity_type: "USER",
+      entity_type: "SYSTEM",
       entity_id: null
     });
 

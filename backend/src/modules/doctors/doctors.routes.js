@@ -25,14 +25,6 @@ const { authenticate } = require("../../middleware/auth.middleware");
  * Get All Active Doctors
  * GET /doctors/
  * 
- * Returns a list of all active doctors for use in:
- * - Appointment booking dropdown
- * - Patient care assignment
- * - Admin user management views
- * 
- * Note: This route requires authentication. For public registration where
- * doctor selection might be needed, consider creating a public endpoint.
- * 
  * @requires Authentication - Valid JWT token required
  * 
  * @returns {Array} List of doctors with doctor_id, full_name, and specialization

@@ -1,59 +1,27 @@
 /**
  * Patient Service
- * 
- * This service layer contains business logic for patient management.
- * Handles patient creation, PII encryption, and user account linking.
- * 
- * PII Protection:
- * - Patient names are encrypted using AES-256 before storage
- * - Medical record numbers are auto-generated
- * - Minor status is automatically determined from DOB
- * 
- * @module modules/patients/service
+ * Handles business logic, PII encryption, and user linking.
  */
 
-// Database connection pool
 const pool = require("../../config/db");
-
-// Password hashing for user accounts
 const bcrypt = require("bcrypt");
-
-// Encryption utility for PII
 const { encrypt } = require("../../utils/encryption");
 
-// =============================================================================
-// PATIENT CREATION (without user account)
-// =============================================================================
+// ============================
+// PATIENT CREATION
+// ============================
 
-/**
- * Create Patient Record
- * 
- * Creates a patient record without linking to a user account.
- * Used for legacy records or manual data entry by staff.
- * 
- * Features:
- * - Encrypts patient name for PII protection
- * - Auto-generates unique Medical Record Number (MRN)
- * - Automatically calculates is_minor flag from DOB
- * 
- * @param {Object} data - Patient data
- * @param {string} [data.user_id] - Optional user ID to link (usually null)
- * @param {string} data.full_name - Patient's full name (will be encrypted)
- * @param {string} data.dob - Date of birth
- * @param {string} data.gender - Gender
- * @param {string} data.blood_group - Blood group
- * @returns {Object} Created patient record
- */
+// Create patient record
 async function createPatient(data) {
   const {
-    user_id = null,  // Optional user link (usually null for manual creation)
+    user_id = null,
     full_name,
     dob,
     gender,
     blood_group
   } = data;
 
-  // 🔐 Encrypt the patient name for PII protection
+  // Encrypt PII
   const encryptedName = encrypt(full_name);
 
   const result = await pool.query(
@@ -91,18 +59,11 @@ async function createPatient(data) {
   return result.rows[0];
 }
 
-// =============================================================================
+// ============================
 // PATIENT LISTING
-// =============================================================================
+// ============================
 
-/**
- * Get All Patients
- * 
- * Retrieves all active (non-deleted) patients from the database.
- * Note: Names are returned encrypted and must be decrypted by controller.
- * 
- * @returns {Array} Array of patient records (names still encrypted)
- */
+// Get all active patients (encrypted)
 async function getAllPatients() {
   const result = await pool.query(
     `
@@ -126,32 +87,11 @@ async function getAllPatients() {
   return result.rows;
 }
 
-// =============================================================================
-// PATIENT REGISTRATION (with user account)
-// =============================================================================
+// ============================
+// REGISTRATION
+// ============================
 
-/**
- * Register Patient with User Account
- * 
- * Creates both a user account AND a patient record, linking them together.
- * This enables patients to log into the patient portal.
- * 
- * Steps:
- * 1. Check username uniqueness
- * 2. Hash password with bcrypt
- * 3. Create user record
- * 4. Create patient record linked to user
- * 
- * @param {Object} data - Registration data
- * @param {string} data.username - Unique username for login
- * @param {string} data.password - Password (will be hashed)
- * @param {string} data.full_name - Patient's full name (will be encrypted)
- * @param {string} data.dob - Date of birth
- * @param {string} data.gender - Gender
- * @param {string} data.blood_group - Blood group
- * @returns {Object} Created patient record
- * @throws {Error} If username already exists
- */
+// Register patient + user account
 async function registerPatientWithUser(data) {
   const {
     username,
@@ -162,7 +102,7 @@ async function registerPatientWithUser(data) {
     blood_group
   } = data;
 
-  // 1️⃣ Check username uniqueness
+  // 1. Check uniqueness
   const existingUser = await pool.query(
     `SELECT user_id FROM users WHERE username = $1 AND deleted_at IS NULL`,
     [username]
@@ -172,10 +112,10 @@ async function registerPatientWithUser(data) {
     throw new Error("Username already exists");
   }
 
-  // 2️⃣ Hash password with bcrypt (salt rounds = 10)
+  // 2. Hash password
   const passwordHash = await bcrypt.hash(password, 10);
 
-  // 3️⃣ Create user account
+  // 3. Create user
   const userResult = await pool.query(
     `
     INSERT INTO users (
@@ -201,10 +141,9 @@ async function registerPatientWithUser(data) {
 
   const user_id = userResult.rows[0].user_id;
 
-  // 🔐 Encrypt patient name for PII protection
+  // 4. Create linked patient (encrypt name)
   const encryptedName = encrypt(full_name);
 
-  // 4️⃣ Create patient record linked to user
   const patientResult = await pool.query(
     `
     INSERT INTO patients (

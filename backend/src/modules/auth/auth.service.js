@@ -355,23 +355,6 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
       throw new Error(isExpired ? "OTP has expired. Please request a new one." : "Invalid OTP. Please check and try again.");
     }
 
-    // Move to USERS table
-    // Note: 'password' arg is technically redundant if we used the one from pending, 
-    // but the frontend sends it again. Let's use the one from pending as it was hashed.
-    // Actually, frontend might allow password change? 
-    // The previous flow set password at activation.
-    // The current flow sets password at registration.
-    // So 'pendingUser.password_hash' is what we want.
-    // UNLESS the frontend sends a NEW password here?
-    // Let's assume we use the one stored in pending for now as that's what they signed up with.
-
-    // Create User
-    // Use Full Name as Username due to user request. 
-    // If Full Name is null (fallback), use email part or email.
-    // Note: 'username' must be unique. If 'John Doe' exists, this might fail.
-    // For now, we assume names are unique or acceptable to fail/user handle.
-    // Or we can append random digits to ensure uniqueness.
-    // Let's try raw full_name first as requested.
     const usernameToUse = pendingUser.full_name || email;
 
     const userInsert = await pool.query(
@@ -398,7 +381,7 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
       );
     }
 
-    // 🏥 CREATE PATIENT RECORD if role is PATIENT
+    // CREATE PATIENT RECORD if role is PATIENT
     if (pendingUser.role === 'PATIENT') {
       try {
         await patientService.createPatient({
@@ -410,7 +393,6 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
         });
       } catch (patientErr) {
         console.error("Failed to create patient record:", patientErr);
-        // Optionally rollback? For now, logging.
       }
     }
 
@@ -482,7 +464,7 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
 /**
  * FORGOT PASSWORD
  */
-exports.forgotPassword = async (email) => {
+exports.forgotPassword = async (username) => {
   const { rows } = await pool.query(
     `
     SELECT user_id FROM users
@@ -490,7 +472,7 @@ exports.forgotPassword = async (email) => {
       AND is_active = true
       AND is_locked = false
     `,
-    [email]
+    [username]
   );
 
   if (!rows.length) {
@@ -525,15 +507,16 @@ exports.forgotPassword = async (email) => {
   );
 
   // Determine email to send to:
-  // User might have 'username' != 'email', so we fetch the explicit 'email' column if possible.
-  // But we just updated the schema to have an 'email' column.
+  // We fetch the explicit 'email' column if possible.
 
   // Fetch user email
   const user = await pool.query(`SELECT email FROM users WHERE user_id = $1`, [userId]);
-  const userEmail = user.rows[0]?.email || email; // Fallback to original 'email' argument if 'email' column is null (legacy)
+  const userEmail = user.rows[0]?.email;
 
-  // 🔒 EMAIL REDIRECTED FOR TESTING
-  // In real prod, use userEmail
+  if (!userEmail) {
+    throw new Error("No email associated with this account");
+  }
+
   await sendOTPEmail(userEmail, otp);
 
   return {

@@ -11,7 +11,7 @@ const { logAudit } = require("../../utils/auditLogger");
 const { attachLabPrivateKey, attachDoctorPrivateKey } = require("../../../src/middleware/labKey.middleware");
 
 /* ======================================================
-   1️⃣ DOCTOR ORDERS LAB TEST
+ DOCTOR ORDERS LAB TEST
    POST /labs/lab-orders
    ====================================================== */
 router.post(
@@ -52,7 +52,7 @@ router.post(
 );
 
 /* ======================================================
-   2️⃣ LAB TECH UPLOADS LAB REPORT
+    LAB TECH UPLOADS LAB REPORT
    POST /labs/reports
    ====================================================== */
 router.post(
@@ -71,7 +71,7 @@ router.post(
         });
       }
 
-      // 🔐 must be attached by middleware
+      // must be attached by middleware
       const labPrivateKey = req.labPrivateKey;
       console.log("🔑 Lab Private Key Present:", !!labPrivateKey);
 
@@ -105,7 +105,7 @@ router.post(
 );
 
 /* ======================================================
-   3️⃣ DOCTOR VERIFIES LAB REPORT
+    DOCTOR VERIFIES LAB REPORT
    PATCH /labs/reports/:reportId/verify
    ====================================================== */
 router.patch(
@@ -117,7 +117,7 @@ router.patch(
     try {
       const { reportId } = req.params;
 
-      // 🔐 must be attached by middleware
+      // must be attached by middleware
       const doctorPrivateKey = req.doctorPrivateKey;
 
       if (!doctorPrivateKey) {
@@ -151,7 +151,7 @@ router.patch(
 );
 
 /* ======================================================
-   5️⃣ PATIENT VIEWS OWN LAB REPORTS
+    PATIENT VIEWS OWN LAB REPORTS
    GET /labs/reports/patient
    ====================================================== */
 router.get(
@@ -173,7 +173,7 @@ router.get(
 );
 
 /* ======================================================
-   4️⃣ VIEW SINGLE LAB REPORT (SECURE)
+  VIEW SINGLE LAB REPORT (SECURE)
    GET /labs/reports/:reportId
    ====================================================== */
 router.get(
@@ -198,7 +198,7 @@ router.get(
 
 
 /* ======================================================
-   6️⃣ DOCTOR VIEWS ASSIGNED LAB REPORTS
+    DOCTOR VIEWS ASSIGNED LAB REPORTS
    GET /labs/doctor-reports
    ====================================================== */
 router.get(
@@ -220,7 +220,7 @@ router.get(
 );
 
 /* ======================================================
-   7️⃣ GET AVAILABLE LAB TESTS
+    GET AVAILABLE LAB TESTS
    GET /labs/tests
    (Accessible by Doctors for ordering)
    ====================================================== */
@@ -240,7 +240,7 @@ router.get(
 );
 
 /* ======================================================
-   8️⃣ GET PENDING ORDERS (LAB TECH)
+    GET PENDING ORDERS (LAB TECH)
    GET /labs/pending-orders
    ====================================================== */
 router.get(

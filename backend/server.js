@@ -14,11 +14,20 @@ const app = require("./src/app");
 // Define the server port - uses environment variable or defaults to 5000
 const PORT = process.env.PORT || 5000;
 
+const http = require("http");
+const { initSocket } = require("./src/modules/telemedicine/telemedicine.socket");
+
+// Create HTTP server wrapping the Express app
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initSocket(server);
+
 /**
- * Start the Express server
+ * Start the HTTP server
  * Listens on the configured PORT and logs startup information
  */
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   // Log successful server startup with the port number
   console.log(`🚀 Server running on port ${PORT}`);
 

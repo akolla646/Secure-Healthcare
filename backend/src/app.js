@@ -101,6 +101,7 @@ app.use("/auth", authRoutes);                  // Authentication & authorization
 app.use("/patients", patientRoutes);           // Patient records
 app.use("/appointments", appointmentsRoutes);  // Appointment scheduling
 app.use("/doctors", require("./modules/doctors/doctors.routes")); // Doctor listing
+app.use("/telemedicine", require("./modules/telemedicine/telemedicine.routes")); // Telemedicine chat
 
 // =============================================================================
 // UTILITY ROUTES

@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 
 // Use Real API Client
-import { loginUser, registerUser, verifyLoginOtp as apiVerifyLoginOtp, activateAccount as apiActivateAccount, resendOtp } from '../api/client';
+import { loginUser, registerUser, verifyLoginOtp as apiVerifyLoginOtp, activateAccount as apiActivateAccount, resendOtp, forgotPassword as apiForgotPassword, resetPassword as apiResetPassword } from '../api/client';
 
 const AuthContext = createContext(null);
 
@@ -104,6 +104,24 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const forgotPassword = async (username) => {
+        try {
+            await apiForgotPassword(username);
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.error || 'Request failed' };
+        }
+    };
+
+    const resetPassword = async (email, otp, newPassword) => {
+        try {
+            await apiResetPassword({ email, otp, newPassword });
+            return { success: true };
+        } catch (error) {
+            return { success: false, message: error.response?.data?.error || 'Reset failed' };
+        }
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         setUser(null);
@@ -118,6 +136,9 @@ export const AuthProvider = ({ children }) => {
             verifyLoginOtp,
             activateAccount,
             resendOtp: handleResendOtp,
+            forgotPassword,
+            resetPassword,
+
             isAuthenticated: !!user,
             role: user?.role,
             isLoading: loading

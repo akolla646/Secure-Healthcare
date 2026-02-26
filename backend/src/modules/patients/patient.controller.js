@@ -1,43 +1,21 @@
 /**
  * Patient Controller
- * 
- * This controller handles HTTP request/response logic for patient management
- * operations. It delegates business logic to the patient service layer and
- * handles PII decryption for responses.
- * 
- * Security Note: Patient names are stored encrypted (PII protection) and
- * must be decrypted before sending to authorized users.
- * 
- * @module modules/patients/controller
+ * Handles patient management and PII decryption.
  */
 
-// Import service layer and utilities
 const patientService = require("./patient.service");
 const { decrypt } = require("../../utils/crypto.util");
 const logAudit = require("../../utils/auditLogger");
 
-// =============================================================================
+// ============================
 // PATIENT CREATION
-// =============================================================================
+// ============================
 
-/**
- * Create Patient (without user account)
- * 
- * Handles POST /patients/
- * Creates a patient record that is not linked to a user account.
- * Used for manual data entry or legacy records.
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.body - Patient data (full_name, dob, gender, blood_group)
- * @param {Object} req.user - Authenticated user (admin/doctor)
- * @param {Object} res - Express response object
- */
+// Create patient without user account (legacy/manual)
 async function createPatient(req, res) {
   try {
-    // Create patient via service layer
     const patient = await patientService.createPatient(req.body);
 
-    // 🔐 AUDIT LOG - record who created this patient
     await logAudit({
       actorUserId: req.user.user_id,
       action: "CREATE_PATIENT",
@@ -46,8 +24,7 @@ async function createPatient(req, res) {
       ipAddress: req.ip
     });
 
-    // 🔐 Decrypt name before sending response
-    // PII is stored encrypted but must be readable in the response
+    // Decrypt name for response
     if (patient.full_name_encrypted) {
       patient.full_name_encrypted = decrypt(patient.full_name_encrypted);
     }
@@ -58,36 +35,24 @@ async function createPatient(req, res) {
   }
 }
 
-// =============================================================================
+// ============================
 // PATIENT LISTING
-// =============================================================================
+// ============================
 
-/**
- * Get All Patients
- * 
- * Handles GET /patients/
- * Returns all active patients. Decrypts PII only for authorized roles.
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.user - Authenticated user (for role-based decryption)
- * @param {Object} res - Express response object
- */
+// Get all patients (decrypts for medical staff)
 async function getAll(req, res) {
   try {
-    // Fetch all patients from service layer
     const patients = await patientService.getAllPatients();
 
-    // 🔐 AUDIT LOG - record bulk read access
     await logAudit({
       actorUserId: req.user.user_id,
       action: "VIEW_PATIENT",
       entityType: "PATIENT",
-      entityId: null, // Multiple patients (bulk read)
+      entityId: null,
       ipAddress: req.ip
     });
 
-    // 🔐 Decrypt PII ONLY for authorized medical staff
-    // This ensures patient data is protected but usable by care providers
+    // Decrypt PII for authorized roles
     if (["ADMIN", "DOCTOR", "NURSE"].includes(req.user.role)) {
       patients.forEach(p => {
         if (p.full_name_encrypted) {
@@ -102,28 +67,15 @@ async function getAll(req, res) {
   }
 }
 
-// =============================================================================
-// PATIENT REGISTRATION (with user account)
-// =============================================================================
+// ============================
+// REGISTRATION
+// ============================
 
-/**
- * Register Patient with User Account
- * 
- * Handles POST /patients/register
- * Creates both a patient record and a linked user account.
- * This allows patients to log into the patient portal.
- * 
- * @param {Object} req - Express request object
- * @param {Object} req.body - Patient data with username/password
- * @param {Object} req.user - Authenticated user (admin/doctor)
- * @param {Object} res - Express response object
- */
+// Register patient with user account (portal access)
 async function registerPatientWithUser(req, res) {
   try {
-    // Create patient with linked user account
     const patient = await patientService.registerPatientWithUser(req.body);
 
-    // 🔐 AUDIT LOG - record patient account creation
     await logAudit({
       actorUserId: req.user.user_id,
       action: "UPDATE_PATIENT",
@@ -132,7 +84,6 @@ async function registerPatientWithUser(req, res) {
       ipAddress: req.ip
     });
 
-    // 🔐 Decrypt before response
     if (patient.full_name_encrypted) {
       patient.full_name_encrypted = decrypt(patient.full_name_encrypted);
     }

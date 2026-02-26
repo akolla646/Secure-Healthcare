@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock } from 'lucide-react';
+import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
@@ -27,9 +27,11 @@ const PatientDashboard = () => {
                 // Fetch Appointments
                 const apptRes = await api.get('/appointments/my-appointments');
                 if (apptRes.data && apptRes.data.length > 0) {
-                    // Filter for future appointments and sort by date
+                    // Filter for future and today's appointments and sort by date
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
                     const future = apptRes.data
-                        .filter(a => new Date(a.scheduled_start) > new Date())
+                        .filter(a => new Date(a.scheduled_start) >= today)
                         .sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
                     setAppointments(future);
                 }
@@ -283,10 +285,6 @@ const PatientDashboard = () => {
                                 <span className="font-medium">View my Care Plan</span>
                                 <ArrowRight className="h-4 w-4" />
                             </Link>
-                            <button className="flex items-center justify-between w-full p-3 text-left text-sm text-slate-600 hover:bg-slate-50 rounded-md transition border border-slate-100">
-                                <span>Request Prescription Refill</span>
-                                <ArrowRight className="h-4 w-4" />
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -426,10 +424,18 @@ const PatientDashboard = () => {
 
                             <div>
                                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</label>
-                                <div className="mt-1">
+                                <div className="mt-1 flex justify-between items-center">
                                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
                                         {viewingAppointment.status || 'SCHEDULED'}
                                     </span>
+
+                                    <Link
+                                        to={`/telemedicine/${viewingAppointment.appointment_id}`}
+                                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition"
+                                    >
+                                        <MessageSquare className="h-4 w-4 mr-1.5" />
+                                        Join Telemedicine Consult
+                                    </Link>
                                 </div>
                             </div>
                         </div>

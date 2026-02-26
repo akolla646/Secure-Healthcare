@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
-import { User, Activity, Calendar, ChevronRight, AlertTriangle, Beaker, FileCheck, CheckCircle, Loader2, Clock } from 'lucide-react';
+import { User, Activity, Calendar, ChevronRight, AlertTriangle, Beaker, FileCheck, CheckCircle, Loader2, Clock, MessageSquare } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import AdminDashboard from './dashboards/AdminDashboard';
 import PatientDashboard from './dashboards/PatientDashboard';
@@ -55,6 +55,7 @@ const Dashboard = () => {
             // Map appointments to patient view
             const data = response.data.map(appt => ({
                 id: appt.patient_id,
+                appointment_id: appt.appointment_id,
                 name: appt.patient_name || 'Unknown Patient',
                 age: calculateAge(appt.date_of_birth),
                 date: new Date(appt.scheduled_start).toLocaleDateString(),
@@ -242,6 +243,15 @@ const Dashboard = () => {
                                             >
                                                 <Beaker className="h-4 w-4 text-purple-600 mr-1" />
                                                 Order Lab
+                                            </Link>
+
+                                            <Link
+                                                to={`/telemedicine/${patient.appointment_id}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 shadow-sm text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 relative z-20"
+                                            >
+                                                <MessageSquare className="h-4 w-4 text-indigo-600 mr-1" />
+                                                Telemedicine
                                             </Link>
 
                                             <div className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${patient.status === 'Critical' ? 'bg-red-100 text-red-800' :

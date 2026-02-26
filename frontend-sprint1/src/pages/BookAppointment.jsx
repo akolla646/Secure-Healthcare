@@ -238,7 +238,11 @@ const BookAppointment = () => {
                             <InputGroup label="Appointment Time *">
                                 <select value={formData.appointmentTime} onChange={e => setFormData({ ...formData, appointmentTime: e.target.value })} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
                                     <option value="">Select Time</option>
-                                    {['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'].map(t => (
+                                    {Array.from({ length: 48 }, (_, i) => {
+                                        const h = Math.floor(i / 2).toString().padStart(2, '0');
+                                        const m = i % 2 === 0 ? '00' : '30';
+                                        return `${h}:${m}`;
+                                    }).map(t => (
                                         <option key={t} value={t}>{t}</option>
                                     ))}
                                 </select>

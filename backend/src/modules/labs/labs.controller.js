@@ -4,10 +4,7 @@ const pool = require("../../config/db");
 const labsService = require("./labs.service");
 
 /* ======================================================
-   1️⃣ DOCTOR ORDERS LAB TEST
-   ====================================================== */
-/* ======================================================
-   1️⃣ DOCTOR ORDERS LAB TEST
+    DOCTOR ORDERS LAB TEST
    ====================================================== */
 exports.createLabOrder = async (patientId, testId, doctorId, testName) => {
   let finalTestId = testId;
@@ -38,7 +35,7 @@ exports.createLabOrder = async (patientId, testId, doctorId, testName) => {
 };
 
 /* ======================================================
-   2️⃣ LAB TECH UPLOADS LAB REPORT
+   LAB TECH UPLOADS LAB REPORT
    ====================================================== */
 exports.createLabReport = async (
   orderId,
@@ -55,7 +52,7 @@ exports.createLabReport = async (
 };
 
 /* ======================================================
-   3️⃣ DOCTOR VERIFIES LAB REPORT
+    DOCTOR VERIFIES LAB REPORT
    ====================================================== */
 exports.verifyLabReport = async (
   reportId,
@@ -72,14 +69,14 @@ exports.verifyLabReport = async (
 };
 
 /* ======================================================
-   4️⃣ VIEW SINGLE LAB REPORT
+    VIEW SINGLE LAB REPORT
    ====================================================== */
 exports.viewLabReport = async (reportId, viewerUserId, viewerRole) => {
   return await labsService.viewLabReport(reportId, viewerUserId, viewerRole);
 };
 
 /* ======================================================
-   5️⃣ PATIENT VIEWS OWN VERIFIED LAB REPORTS
+    PATIENT VIEWS OWN VERIFIED LAB REPORTS
    ====================================================== */
 exports.getPatientLabReports = async (userId) => {
   // Resolve patient_id from user_id
@@ -116,21 +113,21 @@ exports.getPatientLabReports = async (userId) => {
 };
 
 /* ======================================================
-   6️⃣ DOCTOR VIEWS ASSIGNED LAB REPORTS
+    DOCTOR VIEWS ASSIGNED LAB REPORTS
    ====================================================== */
 exports.getDoctorLabReports = async (doctorId) => {
   return await labsService.getDoctorLabReports(doctorId);
 };
 
 /* ======================================================
-   7️⃣ GET AVAILABLE LAB TESTS
+    GET AVAILABLE LAB TESTS
    ====================================================== */
 exports.getLabTests = async () => {
   return await labsService.getAllLabTests();
 };
 
 /* ======================================================
-   8️⃣ GET PENDING LAB ORDERS
+    GET PENDING LAB ORDERS
    ====================================================== */
 exports.getPendingLabOrders = async () => {
   return await labsService.getPendingLabOrders();

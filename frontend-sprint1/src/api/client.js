@@ -46,4 +46,9 @@ export const registerUser = (userData) => api.post('/auth/register', userData); 
 export const loginUser = (credentials) => api.post('/auth/login', { username: credentials.username, password: credentials.password });
 export const activateAccount = (data) => api.post('/auth/activate', { email: data.email, otp: data.otp, password: data.password }); // Replaces verifyOtp for Register
 
+// Password Reset
+export const forgotPassword = (username) => api.post('/auth/forgot-password', { username });
+export const resetPassword = (data) => api.post('/auth/reset-password', { email: data.email, otp: data.otp, newPassword: data.newPassword });
+
+
 export default api;

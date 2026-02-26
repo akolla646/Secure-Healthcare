@@ -10,6 +10,10 @@ import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
 import DoctorAvailability from './pages/DoctorAvailability';
 import AuditLogs from './pages/AuditLogs';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import TelemedicinePage from './pages/TelemedicinePage';
+import MessagesPage from './pages/MessagesPage';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -20,6 +24,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route
             path="/book-appointment"
@@ -77,6 +83,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
                   <AuditLogs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/telemedicine/:appointmentId"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                  <TelemedicinePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                  <MessagesPage />
                 </ProtectedRoute>
               }
             />

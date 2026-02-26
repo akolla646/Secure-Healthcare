@@ -1,48 +1,23 @@
 /**
- * Lab Key Middleware
- * 
- * This middleware attaches private keys for digital signatures to the request
- * object. These keys are used by lab technicians and doctors to cryptographically
- * sign lab reports, ensuring authenticity and non-repudiation.
- * 
- * Security Flow:
- * 1. Lab Tech uploads report → signs with LAB_PRIVATE_KEY
- * 2. Doctor verifies report → signs with DOCTOR_PRIVATE_KEY
- * 3. Both signatures are verified using corresponding public keys
- * 
- * @module middleware/labKey
+ * Lab & Doctor Private Key Middleware
+ * Attaches role-based private keys from environment variables.
  */
 
 "use strict";
 
 /**
- * Attach Lab Technician Private Key Middleware
- * 
- * For LAB_TECH users, attaches the lab private key to req.labPrivateKey.
- * This key is used to digitally sign lab reports when uploading results.
- * 
- * The private key is stored in environment variables and may contain escaped
- * newlines (\n) which are converted to actual newlines for PEM format.
- * 
- * @param {Object} req - Express request object with req.user from auth middleware
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * Attach Lab Technician Private Key
  */
 module.exports.attachLabPrivateKey = (req, res, next) => {
-  // Only attach key for LAB_TECH role - skip for other roles
-  if (req.user.role !== "LAB_TECH") {
-    return next();
-  }
+  // Only for LAB_TECH role
+  if (req.user.role !== "LAB_TECH") return next();
 
-  // Ensure the private key is configured in environment
+  // Ensure key exists
   if (!process.env.LAB_PRIVATE_KEY) {
-    return res.status(500).json({
-      error: "Lab private key not configured"
-    });
+    return res.status(500).json({ error: "Lab private key not configured" });
   }
 
-  // Convert escaped newlines back to actual newlines for PEM format
-  // Also strip any literal double quotes that might wrap the key in some environments
+  // Format PEM key (fix escaped newlines, remove wrapping quotes)
   let key = process.env.LAB_PRIVATE_KEY.trim();
   if (key.startsWith('"') && key.endsWith('"')) {
     key = key.substring(1, key.length - 1);
@@ -53,30 +28,18 @@ module.exports.attachLabPrivateKey = (req, res, next) => {
 };
 
 /**
- * Attach Doctor Private Key Middleware
- * 
- * For DOCTOR users, attaches the doctor private key to req.doctorPrivateKey.
- * This key is used to digitally sign (verify) lab reports, confirming the
- * doctor has reviewed and approved the results.
- * 
- * @param {Object} req - Express request object with req.user from auth middleware
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * Attach Doctor Private Key
  */
 module.exports.attachDoctorPrivateKey = (req, res, next) => {
-  // Only attach key for DOCTOR role - skip for other roles
-  if (req.user.role !== "DOCTOR") {
-    return next();
-  }
+  // Only for DOCTOR role
+  if (req.user.role !== "DOCTOR") return next();
 
-  // Ensure the private key is configured in environment
+  // Ensure key exists
   if (!process.env.DOCTOR_PRIVATE_KEY) {
-    return res.status(500).json({
-      error: "Doctor private key not configured"
-    });
+    return res.status(500).json({ error: "Doctor private key not configured" });
   }
 
-  // Convert escaped newlines to actual newlines for PEM format
+  // Format PEM key
   let key = process.env.DOCTOR_PRIVATE_KEY.trim();
   if (key.startsWith('"') && key.endsWith('"')) {
     key = key.substring(1, key.length - 1);
