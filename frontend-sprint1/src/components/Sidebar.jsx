@@ -48,8 +48,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ]
     };
 
-    // Fallback if role not found
-    const currentNav = navItems[user?.role] || navItems['Staff'];
+    // Fallback if role not found — normalize to title case (JWT sends 'DOCTOR', keys are 'Doctor')
+    const normalizedRole = user?.role
+        ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+        : null;
+    const currentNav = navItems[normalizedRole] || navItems['Staff'];
 
     const isActive = (path) => location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path));
 

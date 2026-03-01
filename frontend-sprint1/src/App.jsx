@@ -30,17 +30,17 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/vitals-dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Nurse', 'NURSE', 'Patient', 'PATIENT']}>
-                <VitalsDashboard />
-              </ProtectedRoute>
-            }
-          />
 
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route
+              path="/vitals-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Nurse', 'NURSE', 'Patient', 'PATIENT']}>
+                  <VitalsDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/patient/:id/diagnosis"
               element={
