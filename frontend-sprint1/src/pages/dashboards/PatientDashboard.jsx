@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock } from 'lucide-react';
+import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/client';
@@ -277,8 +277,18 @@ const PatientDashboard = () => {
                         <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
                         <div className="space-y-2">
                             <Link
+                                to="/ai-bot"
+                                className="flex items-center justify-between w-full p-4 text-left text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-100 shadow-sm"
+                            >
+                                <div className="flex items-center font-medium">
+                                    <Sparkles className="h-5 w-5 mr-3 text-purple-500" />
+                                    Launch AI Care Advisor
+                                </div>
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                            <Link
                                 to={`/patient/${user?.sub}/care-plan`}
-                                className="flex items-center justify-between w-full p-3 text-left text-sm text-slate-600 hover:bg-slate-50 rounded-md transition border border-slate-100"
+                                className="flex items-center justify-between w-full p-3 text-left text-sm text-slate-600 hover:bg-slate-50 rounded-md transition border border-slate-100 mt-2"
                             >
                                 <span className="font-medium">View my Care Plan</span>
                                 <ArrowRight className="h-4 w-4" />

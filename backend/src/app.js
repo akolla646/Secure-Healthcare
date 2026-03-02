@@ -32,6 +32,7 @@ if (dotenvResult.error) {
     console.log("✅ DOTENV loaded. Keys:", Object.keys(dotenvResult.parsed || {}).join(", "));
 }
 console.log("Checking keys: LAB_PRIVATE_KEY is " + (process.env.LAB_PRIVATE_KEY ? "PRESENT" : "MISSING"));
+console.log("Checking keys: GEMINI_API_KEY is " + (process.env.GEMINI_API_KEY ? "PRESENT" : "MISSING"));
 
 // =============================================================================
 // APPLICATION INITIALIZATION
@@ -84,6 +85,9 @@ const cdssRoutes = require("./modules/cdss/cdss.routes");
 // Admin user management routes - create, view, delete users
 const adminUsersRoutes = require("./routes/adminUsers.routes");
 
+// AI Bot routes
+const aiBotRoutes = require("./modules/aiBot/aiBot.routes");
+
 // =============================================================================
 // ROUTE REGISTRATION
 // =============================================================================
@@ -93,6 +97,7 @@ app.use("/admin", adminUsersRoutes);  // POST/GET/DELETE /admin/users
 app.use("/admin", adminAuditRoutes);  // GET /admin/audit-logs
 
 // Domain-specific routes
+app.use("/ai-bot", aiBotRoutes);                // AI Bot Care and Diet Plan Generation
 app.use("/cdss", cdssRoutes);                   // CDSS parser and generator
 app.use("/labs", labRoutes);                    // Lab orders and reports
 app.use("/prescriptions", prescriptionsRoutes); // Medication prescriptions

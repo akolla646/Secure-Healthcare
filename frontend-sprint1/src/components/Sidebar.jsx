@@ -25,11 +25,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             { name: 'Patient Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'My Patients', path: '/patients', icon: Users }, // Placeholder
             { name: 'Diagnosis & EHR', path: '/ehr', icon: Stethoscope }, // Placeholder
+            { name: '🤖 AI Care Advisor', path: '/ai-bot', icon: Activity },
         ],
         Patient: [
             { name: 'My Health Summary', path: '/dashboard', icon: Activity },
             { name: 'My Care Plan', path: `/patient/${user?.sub}/care-plan`, icon: ClipboardList },
             { name: 'Appointments', path: '/appointments', icon: FileText }, // Placeholder
+            { name: '🤖 AI Care Advisor', path: '/ai-bot', icon: Activity },
         ],
         Admin: [
             { name: 'Admin Overview', path: '/dashboard', icon: ShieldAlert },
