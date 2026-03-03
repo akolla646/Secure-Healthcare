@@ -16,6 +16,7 @@ import TelemedicinePage from './pages/TelemedicinePage';
 import MessagesPage from './pages/MessagesPage';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AIBotPage from './pages/AIBotPage';
 
 function App() {
   return (
@@ -99,6 +100,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
                   <MessagesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/ai-bot"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                  <AIBotPage />
                 </ProtectedRoute>
               }
             />

@@ -148,7 +148,7 @@ router.post(
           is_active,
           is_locked,
           created_at,
-          mfa_enabled // Enforce MFA by default for all new users
+          mfa_enabled -- Enforce MFA by default for all new users
         )
         VALUES ($1, $3, $2, TRUE, FALSE, NOW(), TRUE)
         RETURNING user_id

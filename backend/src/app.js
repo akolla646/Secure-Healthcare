@@ -27,11 +27,12 @@ const cors = require("cors");
 const path = require("path");
 const dotenvResult = require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 if (dotenvResult.error) {
-  console.error("❌ DOTENV ERROR:", dotenvResult.error);
+    console.error("❌ DOTENV ERROR:", dotenvResult.error);
 } else {
-  console.log("✅ DOTENV loaded. Keys:", Object.keys(dotenvResult.parsed || {}).join(", "));
+    console.log("✅ DOTENV loaded. Keys:", Object.keys(dotenvResult.parsed || {}).join(", "));
 }
 console.log("Checking keys: LAB_PRIVATE_KEY is " + (process.env.LAB_PRIVATE_KEY ? "PRESENT" : "MISSING"));
+console.log("Checking keys: GEMINI_API_KEY is " + (process.env.GEMINI_API_KEY ? "PRESENT" : "MISSING"));
 
 // =============================================================================
 // APPLICATION INITIALIZATION
@@ -84,6 +85,9 @@ const cdssRoutes = require("./modules/cdss/cdss.routes");
 // Admin user management routes - create, view, delete users
 const adminUsersRoutes = require("./routes/adminUsers.routes");
 
+// AI Bot routes
+const aiBotRoutes = require("./modules/aiBot/aiBot.routes");
+
 // =============================================================================
 // ROUTE REGISTRATION
 // =============================================================================
@@ -93,6 +97,7 @@ app.use("/admin", adminUsersRoutes);  // POST/GET/DELETE /admin/users
 app.use("/admin", adminAuditRoutes);  // GET /admin/audit-logs
 
 // Domain-specific routes
+app.use("/ai-bot", aiBotRoutes);                // AI Bot Care and Diet Plan Generation
 app.use("/cdss", cdssRoutes);                   // CDSS parser and generator
 app.use("/labs", labRoutes);                    // Lab orders and reports
 app.use("/prescriptions", prescriptionsRoutes); // Medication prescriptions
@@ -116,10 +121,10 @@ app.use("/telemedicine", require("./modules/telemedicine/telemedicine.routes"));
  * Returns a simple JSON response with status information.
  */
 app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    message: "Backend running"
-  });
+    res.status(200).json({
+        status: "OK",
+        message: "Backend running"
+    });
 });
 
 // =============================================================================
@@ -133,17 +138,17 @@ app.get("/health", (req, res) => {
  * Returns a consistent JSON response instead of HTML.
  */
 app.use((err, req, res, next) => {
-  console.error("❌ UNHANDLED ERROR:", {
-    message: err.message,
-    stack: err.stack,
-    path: req.path,
-    method: req.method
-  });
+    console.error("❌ UNHANDLED ERROR:", {
+        message: err.message,
+        stack: err.stack,
+        path: req.path,
+        method: req.method
+    });
 
-  res.status(err.status || 500).json({
-    success: false,
-    error: err.message || "Internal Server Error"
-  });
+    res.status(err.status || 500).json({
+        success: false,
+        error: err.message || "Internal Server Error"
+    });
 });
 
 // Export the configured Express app for use in server.js

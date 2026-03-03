@@ -12,7 +12,22 @@ const ruleEngine = new RuleEngine();
 
 /**
  * Upload and Parse Lab Report
- * POST /cdss/upload-lab-report
+ * 
+ * Handles the upload of a lab report file, extracts text content, and parses it
+ * to identify the patient and diagnosis code.
+ * 
+ * Input:
+ * - req.file: The uploaded file (multipart/form-data)
+ * 
+ * Output:
+ * - JSON object containing:
+ *   - success: boolean
+ *   - verified: boolean
+ *   - data: { patientId, diagnosisCode, diagnosisName }
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with extracted diagnosis data
  */
 exports.uploadLabReport = async (req, res) => {
     try {
@@ -89,7 +104,23 @@ exports.uploadLabReport = async (req, res) => {
 
 /**
  * Generate Care Plan
- * POST /cdss/generate-care-plan
+ * 
+ * Uses the Rule Engine to generate a personalized care plan based on the 
+ * patient's context (allergies, conditions) and the specific diagnosis.
+ * 
+ * Input:
+ * - req.body.patientId: string (Optional, fetches from DB if present)
+ * - req.body.diagnosisCode: string (Required, e.g., 'E11')
+ * 
+ * Output:
+ * - JSON object containing:
+ *   - success: boolean
+ *   - data: Care Plan Object (treatments, diet, monitoring)
+ *   - reasoning: Array of logic explanations
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with generated care plan
  */
 exports.generateCarePlan = async (req, res) => {
     try {

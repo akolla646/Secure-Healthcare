@@ -72,7 +72,18 @@ class RuleEngine {
     }
 
     /**
-     * Process and filter treatments based on patient context
+     * Process Treatments
+     * 
+     * Filters potential treatments based on patient allergies and contraindications.
+     * Records reasoning for exclusions in the explainability engine.
+     * 
+     * Input:
+     * @param {Object} patient - Patient context with allergies/conditions
+     * @param {Object} diagnosis - Diagnosis object from KG
+     * @param {Object} carePlan - Care plan object to populate
+     * 
+     * Output:
+     * - Populates carePlan.treatments and carePlan.excludedTreatments
      */
     _processTreatments(patient, diagnosis, carePlan) {
         const { allergies, chronicConditions, currentMedications } = patient;
@@ -139,7 +150,17 @@ class RuleEngine {
     }
 
     /**
-     * Process dietary recommendations
+     * Process Dietary Recommendations
+     * 
+     * Selects appropriate dietary advice based on diagnosis and existing conditions.
+     * 
+     * Input:
+     * @param {Object} patient - Patient context
+     * @param {Object} diagnosis - Diagnosis object
+     * @param {Object} carePlan - Care plan object to populate
+     * 
+     * Output:
+     * - Populates carePlan.dietPlan
      */
     _processDietaryRecommendations(patient, diagnosis, carePlan) {
         for (const diet of diagnosis.dietaryRecommendations) {
@@ -177,7 +198,17 @@ class RuleEngine {
     }
 
     /**
-     * Process monitoring requirements
+     * Process Monitoring Requirements
+     * 
+     * Identifies necessary lab tests and vital checks based on the condition.
+     * 
+     * Input:
+     * @param {Object} patient - Patient context
+     * @param {Object} diagnosis - Diagnosis object
+     * @param {Object} carePlan - Care plan object to populate
+     * 
+     * Output:
+     * - Populates carePlan.monitoring
      */
     _processMonitoring(patient, diagnosis, carePlan) {
         const monitoringSet = new Set(diagnosis.monitoringRequired || []);
@@ -204,7 +235,17 @@ class RuleEngine {
     }
 
     /**
-     * Process lab values for specific recommendations
+     * Process Lab Values
+     * 
+     * Analyzes recent lab results to generate specific warnings or treatment adjustments.
+     * 
+     * Input:
+     * @param {Object} patient - Patient context with recentLabValues
+     * @param {Object} diagnosis - Diagnosis object
+     * @param {Object} carePlan - Care plan object to populate
+     * 
+     * Output:
+     * - Populates carePlan.warnings
      */
     _processLabValues(patient, diagnosis, carePlan) {
         const labs = patient.recentLabValues || {};

@@ -10,6 +10,7 @@ const patientService = require("../patients/patient.service");
  * LOGIN – STEP 1 (Password check)
  */
 exports.login = async (username, password) => {
+  const normalizedUsername = username ? username.trim().toLowerCase() : null;
   const { rows } = await pool.query(
     `
     SELECT 
@@ -21,12 +22,12 @@ exports.login = async (username, password) => {
     FROM users u
     JOIN user_roles ur ON u.user_id = ur.user_id
     JOIN roles r ON ur.role_id = r.role_id
-    WHERE (u.username = $1 OR u.email = $1)
+    WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
       AND u.is_active = true
       AND u.is_locked = false
       AND u.password_hash IS NOT NULL
     `,
-    [username]
+    [normalizedUsername]
   );
 
   if (!rows.length) {
@@ -108,7 +109,7 @@ exports.publicRegister = async (data) => {
   }
 
   const existing = await pool.query(
-    `SELECT 1 FROM users WHERE username = $1`,
+    `SELECT 1 FROM users WHERE LOWER(username) = LOWER($1)`,
     [full_name]
   );
 
@@ -148,6 +149,7 @@ exports.publicRegister = async (data) => {
  * LOGIN – STEP 2 (OTP Verification)
  */
 exports.verifyLoginOTP = async (username, otp) => {
+  const normalizedUsername = username ? username.trim().toLowerCase() : null;
   const otpHash = hashOTP(otp);
 
   const { rows } = await pool.query(
@@ -160,13 +162,13 @@ exports.verifyLoginOTP = async (username, otp) => {
     JOIN users u ON eo.user_id = u.user_id
     JOIN user_roles ur ON u.user_id = ur.user_id
     JOIN roles r ON ur.role_id = r.role_id
-    WHERE (u.username = $1 OR u.email = $1)
+    WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
       AND eo.otp_hash = $2
       AND eo.purpose = 'LOGIN_MFA'
       AND eo.used = false
       AND eo.expires_at > now()
     `,
-    [username, otpHash]
+    [normalizedUsername, otpHash]
   );
 
   if (!rows.length) {
@@ -263,7 +265,7 @@ exports.resendOtp = async (identifierInput) => {
  */
 exports.adminCreateUser = async (email, role) => {
   const existing = await pool.query(
-    `SELECT 1 FROM users WHERE username = $1`,
+    `SELECT 1 FROM users WHERE LOWER(username) = LOWER($1) OR LOWER(email) = LOWER($1)`,
     [email]
   );
 
@@ -418,7 +420,7 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
     SELECT eo.otp_id, eo.user_id
     FROM email_otps eo
     JOIN users u ON eo.user_id = u.user_id
-    WHERE u.username = $1
+    WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
       AND eo.otp_hash = $2
       AND eo.purpose = 'ACTIVATION'
       AND eo.used = false
@@ -465,14 +467,15 @@ exports.activateAccount = async (emailInput, otpInput, password) => {
  * FORGOT PASSWORD
  */
 exports.forgotPassword = async (username) => {
+  const normalizedUsername = username ? username.trim().toLowerCase() : null;
   const { rows } = await pool.query(
     `
     SELECT user_id FROM users
-    WHERE username = $1
+    WHERE (LOWER(username) = $1 OR LOWER(email) = $1)
       AND is_active = true
       AND is_locked = false
     `,
-    [username]
+    [normalizedUsername]
   );
 
   if (!rows.length) {
@@ -529,6 +532,7 @@ exports.forgotPassword = async (username) => {
  * RESET PASSWORD
  */
 exports.resetPassword = async (email, otp, newPassword) => {
+  const normalizedEmail = email ? email.trim().toLowerCase() : null;
   const otpHash = hashOTP(otp);
 
   const { rows } = await pool.query(
@@ -536,13 +540,13 @@ exports.resetPassword = async (email, otp, newPassword) => {
     SELECT eo.otp_id, eo.user_id
     FROM email_otps eo
     JOIN users u ON eo.user_id = u.user_id
-    WHERE u.username = $1
+    WHERE (LOWER(u.username) = $1 OR LOWER(u.email) = $1)
       AND eo.otp_hash = $2
       AND eo.purpose = 'RESET_PASSWORD'
       AND eo.used = false
       AND eo.expires_at > now()
     `,
-    [email, otpHash]
+    [normalizedEmail, otpHash]
   );
 
   if (!rows.length) {

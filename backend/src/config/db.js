@@ -9,17 +9,17 @@ const { Pool } = require("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
-    rejectUnauthorized: false, // Required for Neon SSL
+    rejectUnauthorized: false, // Required for Neon serverless PostgreSQL - allows self-signed certificates
   },
 });
 
 // Test connection at startup
 pool.connect()
-  .then(() => console.log("PostgreSQL (Neon) connected ✅"))
+  .then(() => console.log("PostgreSQL (Neon) connected successfully ✅"))
   .catch((err) => {
     console.error("PostgreSQL connection failed ❌");
     console.error(err);
   });
 
-// Export pool for queries
+// Export the pool for use in other modules (repositories, services)
 module.exports = pool;

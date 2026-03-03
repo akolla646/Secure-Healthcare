@@ -21,14 +21,16 @@ const Layout = () => {
                             <span className="ml-2 text-xl font-bold text-slate-900">Secure Health</span>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <Link
-                                to="/messages"
-                                className={`p-2 rounded-full transition-colors flex items-center justify-center ${location.pathname === '/messages' ? 'bg-primary-50 text-primary-600' : 'text-slate-500 hover:bg-slate-100'
-                                    }`}
-                                title="Messages"
-                            >
-                                <MessageSquare className="h-5 w-5" />
-                            </Link>
+                            {['DOCTOR', 'NURSE', 'PATIENT'].includes(user?.role?.toUpperCase()) && (
+                                <Link
+                                    to="/messages"
+                                    className={`p-2 rounded-full transition-colors flex items-center justify-center ${location.pathname === '/messages' ? 'bg-primary-50 text-primary-600' : 'text-slate-500 hover:bg-slate-100'
+                                        }`}
+                                    title="Messages"
+                                >
+                                    <MessageSquare className="h-5 w-5" />
+                                </Link>
+                            )}
 
                             <div className="flex items-center text-sm text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
                                 <User className="h-4 w-4 mr-2" />
