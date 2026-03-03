@@ -15,6 +15,7 @@ import ResetPassword from './pages/ResetPassword';
 import TelemedicinePage from './pages/TelemedicinePage';
 import MessagesPage from './pages/MessagesPage';
 import VitalsDashboard from './pages/VitalsDashboard';
+import PrescriptionOCR from './pages/PrescriptionOCR';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AIBotPage from './pages/AIBotPage';
@@ -117,6 +118,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
                   <AIBotPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/prescription-ocr"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                  <PrescriptionOCR />
                 </ProtectedRoute>
               }
             />

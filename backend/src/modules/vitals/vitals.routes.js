@@ -23,9 +23,7 @@ const controller = require("./vitals.controller");
 const { authenticate } = require("../../middleware/auth.middleware");
 const { authorize } = require("../../middleware/role.middleware");
 
-// =============================================================================
-// VITALS RECORDING (Clinical Staff)
-// =============================================================================
+
 
 /**
  * Record Patient Vitals
@@ -44,10 +42,6 @@ const { authorize } = require("../../middleware/role.middleware");
  * @body {number} oxygen_saturation - SpO2 percentage
  */
 router.post("/", controller.recordVitals);
-
-// =============================================================================
-// PATIENT VITALS VIEW
-// =============================================================================
 
 /**
  * Get My Vitals (Patient)
