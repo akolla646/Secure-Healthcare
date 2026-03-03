@@ -50,5 +50,7 @@ export const activateAccount = (data) => api.post('/auth/activate', { email: dat
 export const forgotPassword = (username) => api.post('/auth/forgot-password', { username });
 export const resetPassword = (data) => api.post('/auth/reset-password', { email: data.email, otp: data.otp, newPassword: data.newPassword });
 
+// Payment Endpoints
+export const createCheckoutSession = (data) => api.post('/payments/create-checkout-session', data);
 
 export default api;

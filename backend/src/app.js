@@ -51,8 +51,15 @@ require("./config/db");
 // Enable CORS for all routes - allows frontend to make API requests
 app.use(cors());
 
-// Parse incoming JSON request bodies
-app.use(express.json());
+// Webhook route must be parsed as raw JSON, so we define it BEFORE the general json middleware
+app.use((req, res, next) => {
+  if (req.originalUrl === '/payments/webhook' || req.originalUrl === '/api/payments/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
+app.use(express.urlencoded({ extended: true }));
 
 // =============================================================================
 // ROUTE IMPORTS
@@ -94,6 +101,9 @@ const adminUsersRoutes = require("./routes/adminUsers.routes");
 // AI Bot routes
 const aiBotRoutes = require("./modules/aiBot/aiBot.routes");
 
+// Payment routes
+const paymentRoutes = require('./modules/payments/payment.routes');
+
 // =============================================================================
 // ROUTE REGISTRATION
 // =============================================================================
@@ -115,6 +125,7 @@ app.use("/doctors", require("./modules/doctors/doctors.routes")); // Doctor list
 app.use("/telemedicine", require("./modules/telemedicine/telemedicine.routes")); // Telemedicine chat
 app.use("/api/vitals", vitalsIntakeRoutes);    // Sprint 2: Vitals Intake & Dashboard
 app.use("/ocr", ocrRoutes);                    // Prescription OCR & AI integration
+app.use("/payments", paymentRoutes);
 
 // =============================================================================
 // UTILITY ROUTES

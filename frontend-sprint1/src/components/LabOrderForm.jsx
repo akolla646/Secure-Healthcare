@@ -77,13 +77,14 @@ const LabOrderForm = ({ patientId, onSuccess }) => {
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Select Lab Test</label>
+                        <label htmlFor="test_id" className="block text-sm font-medium text-slate-700 mb-1">Select Lab Test</label>
                         {loadingTests ? (
                             <div className="flex items-center text-sm text-slate-500">
                                 <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading tests...
                             </div>
                         ) : (
                             <select
+                                id="test_id"
                                 {...register('test_id', { required: 'Please select a test' })}
                                 className="block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
                             >

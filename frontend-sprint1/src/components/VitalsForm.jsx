@@ -64,11 +64,12 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
                 <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {/* Heart Rate */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 flex items-center">
+                        <label htmlFor="heart_rate" className="block text-sm font-medium text-slate-700 flex items-center">
                             <Heart className="h-4 w-4 mr-1 text-red-500" /> Heart Rate (bpm)
                         </label>
                         <input
-                            {...register('heart_rate', { required: 'Required', min: 0, max: 300 })}
+                            id="heart_rate"
+                            {...register('heart_rate', { required: 'Required', min: 0, max: 300, valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                         />
@@ -77,9 +78,10 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
 
                     {/* BP Systolic */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">BP Systolic (mmHg)</label>
+                        <label htmlFor="bp_systolic" className="block text-sm font-medium text-slate-700">BP Systolic (mmHg)</label>
                         <input
-                            {...register('bp_systolic', { required: 'Required', min: 0, max: 300 })}
+                            id="bp_systolic"
+                            {...register('bp_systolic', { required: 'Required', min: 0, max: 300, valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                         />
@@ -87,9 +89,10 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
 
                     {/* BP Diastolic */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700">BP Diastolic (mmHg)</label>
+                        <label htmlFor="bp_diastolic" className="block text-sm font-medium text-slate-700">BP Diastolic (mmHg)</label>
                         <input
-                            {...register('bp_diastolic', { required: 'Required', min: 0, max: 200 })}
+                            id="bp_diastolic"
+                            {...register('bp_diastolic', { required: 'Required', min: 0, max: 200, valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                         />
@@ -97,11 +100,12 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
 
                     {/* Temperature */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 flex items-center">
+                        <label htmlFor="temperature" className="block text-sm font-medium text-slate-700 flex items-center">
                             <Thermometer className="h-4 w-4 mr-1 text-orange-500" /> Temperature (°C)
                         </label>
                         <input
-                            {...register('temperature', { required: 'Required', min: 30, max: 45 })}
+                            id="temperature"
+                            {...register('temperature', { required: 'Required', min: 30, max: 45, valueAsNumber: true })}
                             type="number"
                             step="0.1"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
@@ -110,11 +114,12 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
 
                     {/* Respiratory Rate */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 flex items-center">
+                        <label htmlFor="respiratory_rate" className="block text-sm font-medium text-slate-700 flex items-center">
                             <Wind className="h-4 w-4 mr-1 text-blue-400" /> Respiratory Rate (bpm)
                         </label>
                         <input
-                            {...register('respiratory_rate', { required: 'Required', min: 0, max: 100 })}
+                            id="respiratory_rate"
+                            {...register('respiratory_rate', { required: 'Required', min: 0, max: 100, valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                         />
@@ -122,11 +127,12 @@ const VitalsForm = ({ patientId, appointmentId, onSuccess }) => {
 
                     {/* O2 Saturation */}
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 flex items-center">
+                        <label htmlFor="oxygen_saturation" className="block text-sm font-medium text-slate-700 flex items-center">
                             <Droplet className="h-4 w-4 mr-1 text-blue-600" /> O2 Saturation (%)
                         </label>
                         <input
-                            {...register('oxygen_saturation', { required: 'Required', min: 0, max: 100 })}
+                            id="oxygen_saturation"
+                            {...register('oxygen_saturation', { required: 'Required', min: 0, max: 100, valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full shadow-sm sm:text-sm border-slate-300 rounded-md focus:ring-primary-500 focus:border-primary-500"
                         />

@@ -63,14 +63,21 @@ exports.bookAppointment = async (data, user) => {
     reason
   } = data;
 
-  // Resolve patient_id
+  console.log("--- BOOKING REQUEST INITIATED ---");
+  console.log("Input Doctor ID:", inputDoctorId);
+  console.log("Input Doctor Name:", doctor_name);
+  console.log("User ID:", user.user_id);
+
+  // 🔐 Step 1: Resolve patient_id from logged-in user
   const patient = await repo.getPatientIdByUserId(user.user_id);
   if (!patient) {
+    console.log("Booking failed: Patient not found for user_id", user.user_id);
     const err = new Error("Patient profile not found for this user");
     err.status = 404;
     throw err;
   }
   const patient_id = patient.patient_id;
+  console.log("Resolved Patient ID:", patient_id);
 
   // Resolve doctor_id (by ID or name)
   let doctor_id = inputDoctorId;
@@ -100,14 +107,34 @@ exports.bookAppointment = async (data, user) => {
     throw err;
   }
 
-  // Prepare availability check
-  const start = new Date(scheduled_start);
-  const dayOfWeek = start.getDay(); // 0-6 (Sun-Sat)
-  const startTime = scheduled_start.slice(11, 19);
+  // ⏰ Step 5: Validate time range
+  // ✅ Step 6: Convert JS day to Database day (0-6)
+  // Fix: Extract date string safely and force UTC noon to prevent timezone shifts
+  const datePart = scheduled_start.split('T')[0]; // e.g., "2026-02-12"
+  const strictDate = new Date(`${datePart}T12:00:00Z`);
+  const jsDay = strictDate.getUTCDay(); // JavaScript: 0=Sun, 1=Mon, ..., 6=Sat
+  const dayOfWeek = jsDay;
+
+  // Extract time portions for availability check
+  const startTime = scheduled_start.slice(11, 19); // HH:MM:SS
   const endTime = scheduled_end.slice(11, 19);
 
-  // Resolve doctor user_id for availability table
+  // 🧪 Debug logging for troubleshooting
+  console.log("--- BOOKING DEBUG ---");
+  console.log("Received scheduled_start (raw):", scheduled_start);
+  console.log("Parsed JS Date object:", strictDate);
+  console.log("Calculated JS Day (0=Sun,1=Mon..):", jsDay);
+  console.log("Extracted startTime:", startTime);
+  console.log("Extracted endTime:", endTime);
+
+  // Step 7: Check doctor availability for this time slot
+  // Get the doctor's user_id because doctor_availability table uses user_id in doctor_id column
   const doctorUser = await repo.getDoctorUserIdByDoctorId(doctor_id);
+
+  // Write debug info to file so it can be read regardless of terminal
+  const fs = require('fs');
+  fs.appendFileSync('book_debug.log', `[${new Date().toISOString()}] Start: ${scheduled_start}, Day: ${jsDay}, StartTime: ${startTime}, EndTime: ${endTime}, DoctorID: ${doctor_id}, DoctorUserID: ${doctorUser?.user_id}\n`);
+
   if (!doctorUser) {
     const err = new Error("Doctor user profile not found");
     err.status = 404;
@@ -120,6 +147,9 @@ exports.bookAppointment = async (data, user) => {
     startTime,
     endTime
   );
+
+  console.log("Is Available DB Result:", available);
+  fs.appendFileSync('book_debug.log', `-> IsAvailable: ${available}\n`);
 
   if (!available) {
     const err = new Error("Doctor not available at this time");

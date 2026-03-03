@@ -147,26 +147,25 @@ const BookAppointment = () => {
         // Simple 30 min duration
         // logic to add 30 mins to time string
         const [h, m] = time.split(':').map(Number);
-        const dateObj = new Date(date);
-        dateObj.setHours(h, m + 30);
-        // Return ISO string or similar? backend expects ISO mostly?
-        // Service expects: scheduled_end
-        // Service code: const start = new Date(scheduled_start); const end = new Date(scheduled_end);
-        // So ISO string works better.
-
-        const startObj = new Date(`${date}T${time}:00`);
-        const endObj = new Date(startObj.getTime() + 30 * 60000);
+        const safeTimeStr = `${date}T${time}:00`;
 
         // Format to ISO string but local time consideration might be tricky without timezone.
         // Let's send what Date.toISOString/toLocaleString returns or simplistic format
         // The backend slices: scheduled_start.slice(11, 19). It expects standard ISO-like string.
+        // Prevent local timezone shifting by constructing the string directly
+        const startString = `${date}T${time}:00`;
 
-        // Helper to format: YYYY-MM-DDTHH:mm:ss
-        const format = (d) => {
-            const pad = (n) => n.toString().padStart(2, '0');
-            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-        };
-        return format(endObj);
+        // Calculate end string (add 30 mins)
+        let endH = h;
+        let endM = m + 30;
+        if (endM >= 60) {
+            endH += 1;
+            endM -= 60;
+        }
+        const pad = (n) => n.toString().padStart(2, '0');
+        const endString = `${date}T${pad(endH)}:${pad(endM)}:00`;
+
+        return endString;
     };
 
     if (loading) return <div className="min-h-screen bg-slate-50 flex items-center justify-center text-teal-600"><div className="animate-spin text-4xl">⟳</div></div>;
@@ -200,27 +199,27 @@ const BookAppointment = () => {
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Row 1 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputGroup label="Full Name *">
-                                <input type="text" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="John Doe" required />
+                            <InputGroup label="Full Name *" id="fullName">
+                                <input id="fullName" type="text" value={formData.fullName} onChange={e => setFormData({ ...formData, fullName: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="John Doe" required />
                             </InputGroup>
-                            <InputGroup label="Email Address *">
-                                <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="john@example.com" required />
+                            <InputGroup label="Email Address *" id="email">
+                                <input id="email" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="john@example.com" required />
                             </InputGroup>
                         </div>
 
                         {/* Row 2 */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputGroup label="Phone Number *">
-                                <input type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="+1 234 567 890" required />
+                            <InputGroup label="Phone Number *" id="phone">
+                                <input id="phone" type="tel" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="+1 234 567 890" required />
                             </InputGroup>
-                            <InputGroup label="Age *">
-                                <input type="number" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="25" required />
+                            <InputGroup label="Age *" id="age">
+                                <input id="age" type="number" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="25" required />
                             </InputGroup>
                         </div>
 
                         {/* Doctor */}
-                        <InputGroup label="Select Doctor *">
-                            <select value={formData.doctorId} onChange={handleDoctorChange} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
+                        <InputGroup label="Select Doctor *" id="doctorId">
+                            <select id="doctorId" value={formData.doctorId} onChange={handleDoctorChange} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
                                 <option value="">Choose a Specialist</option>
                                 {doctors.map(d => (
                                     <option key={d.doctor_id} value={d.doctor_id}>
@@ -232,11 +231,11 @@ const BookAppointment = () => {
 
                         {/* Date & Time */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <InputGroup label="Appointment Date *">
-                                <input type="date" value={formData.appointmentDate} onChange={e => setFormData({ ...formData, appointmentDate: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition text-slate-600" required />
+                            <InputGroup label="Appointment Date *" id="appointmentDate">
+                                <input id="appointmentDate" type="date" value={formData.appointmentDate} onChange={e => setFormData({ ...formData, appointmentDate: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition text-slate-600" required />
                             </InputGroup>
-                            <InputGroup label="Appointment Time *">
-                                <select value={formData.appointmentTime} onChange={e => setFormData({ ...formData, appointmentTime: e.target.value })} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
+                            <InputGroup label="Appointment Time *" id="appointmentTime">
+                                <select id="appointmentTime" value={formData.appointmentTime} onChange={e => setFormData({ ...formData, appointmentTime: e.target.value })} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
                                     <option value="">Select Time</option>
                                     {Array.from({ length: 48 }, (_, i) => {
                                         const h = Math.floor(i / 2).toString().padStart(2, '0');
@@ -250,8 +249,8 @@ const BookAppointment = () => {
                         </div>
 
                         {/* Type */}
-                        <InputGroup label="Appointment Type *">
-                            <select value={formData.appointmentType} onChange={e => setFormData({ ...formData, appointmentType: e.target.value })} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
+                        <InputGroup label="Appointment Type *" id="appointmentType">
+                            <select id="appointmentType" value={formData.appointmentType} onChange={e => setFormData({ ...formData, appointmentType: e.target.value })} className="form-select w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition bg-white" required>
                                 <option value="">Select Appointment Type</option>
                                 <option value="First Consultation">First Consultation</option>
                                 <option value="Regular Check-up">Regular Check-up</option>
@@ -261,20 +260,20 @@ const BookAppointment = () => {
                         </InputGroup>
 
                         {/* Notes */}
-                        <InputGroup label="Additional Notes / Symptoms">
-                            <textarea value={formData.symptoms} onChange={e => setFormData({ ...formData, symptoms: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition min-h-[100px]" placeholder="Describe your symptoms..."></textarea>
+                        <InputGroup label="Additional Notes / Symptoms" id="symptoms">
+                            <textarea id="symptoms" value={formData.symptoms} onChange={e => setFormData({ ...formData, symptoms: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition min-h-[100px]" placeholder="Describe your symptoms..."></textarea>
                         </InputGroup>
 
                         {/* Captcha */}
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Verify CAPTCHA *</label>
+                            <label htmlFor="captcha" className="block text-sm font-semibold text-slate-700 mb-2">Verify CAPTCHA *</label>
                             <div className="flex gap-4 mb-3 items-center">
                                 <div className="bg-white px-6 py-2 rounded-lg border border-slate-300 text-xl font-mono tracking-widest text-slate-600 line-through select-none font-bold shadow-sm">
                                     {captcha.code}
                                 </div>
                                 <button type="button" onClick={generateCaptcha} className="bg-teal-100 text-teal-600 p-2 rounded-lg hover:bg-teal-200 transition"><FaSync /></button>
                             </div>
-                            <input type="text" value={formData.captchaInput} onChange={e => setFormData({ ...formData, captchaInput: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="Enter CAPTCHA code" required />
+                            <input id="captcha" type="text" value={formData.captchaInput} onChange={e => setFormData({ ...formData, captchaInput: e.target.value })} className="form-input w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none transition" placeholder="Enter CAPTCHA code" required />
                         </div>
 
                         {/* Submit */}
@@ -296,9 +295,9 @@ const BookAppointment = () => {
     );
 };
 
-const InputGroup = ({ label, children }) => (
+const InputGroup = ({ label, id, children }) => (
     <div className="space-y-2">
-        <label className="block text-sm font-semibold text-slate-600">{label}</label>
+        <label htmlFor={id} className="block text-sm font-semibold text-slate-600">{label}</label>
         {children}
     </div>
 );

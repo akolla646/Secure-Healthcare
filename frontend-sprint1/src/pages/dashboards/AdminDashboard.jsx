@@ -1,3 +1,13 @@
+/**
+ * Admin Dashboard Component
+ * 
+ * The central hub for System Administrators to manage users and monitor system health.
+ * Features:
+ * - Statistical Overview (Total Users, Audit Logs, Status)
+ * - User Management (Create, Delete, List, Search)
+ * - Recent Audit Log Viewing
+ */
+
 import { useState, useEffect } from "react";
 import { Users, FileText, AlertTriangle, CheckCircle, Search, Trash2, Plus } from 'lucide-react';
 import axios from 'axios';
@@ -5,28 +15,34 @@ import { useNavigate, Link } from "react-router-dom";
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
+
+    // Dashboard Statistics State
     const [stats, setStats] = useState({
         totalUsers: 0,
         auditLogs: 0,
         systemStatus: "Compliant"
     });
-    const [logs, setLogs] = useState([]);
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState("");
 
-    // Modal State
+    // Data Lists
+    const [logs, setLogs] = useState([]);   // Recent audit logs
+    const [users, setUsers] = useState([]); // List of all users
+
+    // UI State
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState(""); // For filtering user list
+
+    // Modal State (Add User Form)
     const [showModal, setShowModal] = useState(false);
     const [formData, setFormData] = useState({
         username: "",
         email: "",
         password: "",
-        role: "PATIENT", // default
-        full_name: "", // for patient/doctor
+        role: "PATIENT", // Default role
+        full_name: "",   // Specific to Patient/Doctor
         dob: "",
         gender: "Male",
         blood_group: "O+",
-        // Doctor fields
+        // Doctor specific fields
         specialization: "",
         qualification: "",
         experience_years: 0,
@@ -34,16 +50,25 @@ const AdminDashboard = () => {
         consultation_fee: 0,
         phone_number: ""
     });
+
+    // Feedback State
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
+    // Auth Token
     const token = localStorage.getItem('token');
 
-    // Fetch Initial Data
+    // Load data on component mount
     useEffect(() => {
         fetchDashboardData();
     }, []);
 
+    /**
+     * Fetches all necessary data for the dashboard:
+     * 1. List of users
+     * 2. Recent audit logs
+     * 3. Statistical summaries
+     */
     const fetchDashboardData = async () => {
         setLoading(true);
         try {
@@ -53,21 +78,23 @@ const AdminDashboard = () => {
             const usersRes = await axios.get("http://localhost:5000/admin/users", config);
             setUsers(usersRes.data);
 
-            // 2. Fetch Logs (Recent 5)
+            // 2. Fetch Recent Logs (Limit 5)
             const logsRes = await axios.get("http://localhost:5000/admin/audit-logs?limit=5", config);
             setLogs(logsRes.data.logs);
 
-            // 3. Fetch Audit Summary for Total Count
+            // 3. Fetch Audit Summary for Total Count (More efficient than fetching all logs)
             const summaryRes = await axios.get("http://localhost:5000/admin/audit-logs/summary", config);
 
+            // Update stats state
             setStats({
                 totalUsers: usersRes.data.length,
-                auditLogs: summaryRes.data.total_events, // Real total from DB
+                auditLogs: summaryRes.data.total_events,
                 systemStatus: "Compliant"
             });
 
         } catch (err) {
             console.error("Failed to fetch dashboard data", err);
+            // Redirect to login on auth failure
             if (err.response && err.response.status === 401) {
                 navigate('/');
             }
@@ -76,6 +103,10 @@ const AdminDashboard = () => {
         }
     };
 
+    /**
+     * Deletes a user from the system.
+     * Requires confirmation.
+     */
     const handleDeleteUser = async (userId) => {
         if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -83,7 +114,8 @@ const AdminDashboard = () => {
             await axios.delete(`http://localhost:5000/admin/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            // Refresh
+
+            // Refresh logic
             fetchDashboardData();
             setSuccess("User deleted successfully");
             setTimeout(() => setSuccess(""), 3000);
@@ -94,6 +126,9 @@ const AdminDashboard = () => {
         }
     };
 
+    /**
+     * Handles the form submission for creating a new user.
+     */
     const handleAddUser = async (e) => {
         e.preventDefault();
         setError("");
@@ -102,14 +137,18 @@ const AdminDashboard = () => {
             await axios.post("http://localhost:5000/admin/users", formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            // Success Logic
             setShowModal(false);
+            // Reset Form (Simplified reset)
             setFormData({
                 username: "", email: "", password: "", role: "PATIENT",
                 full_name: "", dob: "", gender: "Male", blood_group: "O+",
                 specialization: "", qualification: "", experience_years: 0, department: "", consultation_fee: 0, phone_number: ""
             });
+
             setSuccess("User created successfully");
-            fetchDashboardData();
+            fetchDashboardData(); // Refresh list to show new user
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Create failed", err);
@@ -117,10 +156,12 @@ const AdminDashboard = () => {
         }
     };
 
+    // Generic input handler
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Filter users based on search term (username or role)
     const filteredUsers = users.filter(u =>
         u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.role_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -130,11 +171,13 @@ const AdminDashboard = () => {
 
     return (
         <div className="space-y-6">
+            {/* Notification Messages */}
             {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
             {success && <div className="bg-green-100 text-green-700 p-3 rounded">{success}</div>}
 
+            {/* Statistics Cards Grid */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Stat Cards */}
+                {/* Total Users Card */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
@@ -151,6 +194,7 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
+                {/* Audit Logs Card + Link */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
@@ -172,6 +216,7 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
+                {/* System Status Card */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                     <div className="p-5">
                         <div className="flex items-center">
@@ -193,6 +238,8 @@ const AdminDashboard = () => {
             <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Manage Users</h3>
+
+                    {/* Search and Add Actions */}
                     <div className="flex space-x-2">
                         <div className="relative">
                             <input
@@ -212,6 +259,8 @@ const AdminDashboard = () => {
                         </button>
                     </div>
                 </div>
+
+                {/* User List Table */}
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -246,7 +295,7 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Recent Audit Log Table */}
+            {/* Recent Audit Logs (Preview) */}
             <div className="bg-white shadow sm:rounded-lg">
                 <div className="px-4 py-5 sm:px-6 border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Recent Audit Logs</h3>
@@ -278,7 +327,7 @@ const AdminDashboard = () => {
                 </ul>
             </div>
 
-            {/* Add User Modal */}
+            {/* Add User Modal Dialog */}
             {showModal && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
                     <div className="relative p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -306,15 +355,8 @@ const AdminDashboard = () => {
                                         <option value="LAB_TECH">Lab Tech</option>
                                     </select>
                                 </div>
-                                {
-                                    /* 
-                                     * Conditional Rendering for Role-Specific Fields
-                                     * 
-                                     * PATIENT: Needs basic biodata (DOB, Gender, etc.)
-                                     * DOCTOR: Needs professional details (Specialization, License, Fees, etc.)
-                                     * LAB_TECH/ADMIN: Currently standard user fields only
-                                     */
-                                }
+
+                                {/* Conditional Rendering based on selected Role */}
                                 {formData.role === 'PATIENT' && (
                                     <>
                                         <div className="mb-4">

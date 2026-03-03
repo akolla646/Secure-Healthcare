@@ -1,30 +1,45 @@
+/**
+ * Patient Dashboard Component
+ * 
+ * The main portal for patients to interact with their healthcare data.
+ * Features:
+ * - Upcoming Appointments: List and View details.
+ * - Lab Reports: View list, see details, and download as text file.
+ * - Quick Actions: Shortcuts to common tasks.
+ * - Wellness Banner: Personalized greeting.
+ */
+
 import { useState, useEffect } from 'react';
 import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock, MessageSquare, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../api/client';
+import api, { createCheckoutSession } from '../../api/client';
 import Modal from '../../components/Modal';
 
 const PatientDashboard = () => {
     const { user } = useAuth();
+
+    // Data States
     const [appointments, setAppointments] = useState([]);
     const [labReports, setLabReports] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Modal State
+    // Modal State for Lab Reports
     const [selectedReport, setSelectedReport] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loadingReport, setLoadingReport] = useState(false);
     const [downloadingId, setDownloadingId] = useState(null);
     const [error, setError] = useState(null);
 
-    // Appointment Modal State
+    // Modal State for Appointments
     const [viewingAppointment, setViewingAppointment] = useState(null);
+    const [viewingSlip, setViewingSlip] = useState(null);
 
+    // Fetch initial dashboard data
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Fetch Appointments
+                // 1. Fetch Appointments
                 const apptRes = await api.get('/appointments/my-appointments');
                 if (apptRes.data && apptRes.data.length > 0) {
                     // Filter for future and today's appointments and sort by date
@@ -36,7 +51,7 @@ const PatientDashboard = () => {
                     setAppointments(future);
                 }
 
-                // Fetch Lab Reports
+                // 2. Fetch Lab Reports
                 const labsRes = await api.get('/labs/my-reports');
                 setLabReports(labsRes.data || []);
 
@@ -49,6 +64,31 @@ const PatientDashboard = () => {
         fetchData();
     }, []);
 
+
+
+    const handlePayNow = async (appointment) => {
+        try {
+            // Initiate Stripe Checkout
+            const response = await createCheckoutSession({
+                amount: appointment.consultation_fee || 50, // Default to $50 if not set
+                description: `Consultation with ${appointment.doctor_name}`,
+                userId: user.sub || user.user_id,
+                appointmentId: appointment.appointment_id // Link payment to appointment
+            });
+
+            // Redirect to Stripe
+            if (response.data.url) {
+                window.location.href = response.data.url;
+            }
+        } catch (err) {
+            console.error("Payment initiation failed", err);
+            alert("Failed to initiate payment. Please try again.");
+        }
+    };
+
+    /**
+     * Fetch full details for a selected lab report and open the modal.
+     */
     const handleViewReport = async (reportId) => {
         setLoadingReport(true);
         setIsModalOpen(true);
@@ -66,6 +106,9 @@ const PatientDashboard = () => {
         }
     };
 
+    /**
+     * Generates a text file of the lab report and triggers a download.
+     */
     const handleDownloadReport = async (e, report) => {
         e.stopPropagation();
         setDownloadingId(report.report_id);
@@ -73,11 +116,13 @@ const PatientDashboard = () => {
         try {
             let fullReport = report;
 
+            // Ensure we have full details (in case we are downloading from list view)
             if (!report.result) {
                 const response = await api.get(`/labs/reports/${report.report_id}`);
                 fullReport = response.data;
             }
 
+            // Construct the file content
             const lines = [];
             lines.push(`LAB REPORT`);
             lines.push(`==========================================`);
@@ -89,6 +134,7 @@ const PatientDashboard = () => {
             lines.push(``);
             lines.push(`RESULTS:`);
 
+            // Handle different result formats (string or object)
             if (typeof fullReport.result === 'string') {
                 lines.push(fullReport.result);
             } else if (typeof fullReport.result === 'object') {
@@ -98,6 +144,7 @@ const PatientDashboard = () => {
                 });
             }
 
+            // Verification Details
             if (fullReport.verified) {
                 lines.push(``);
                 lines.push(`[VERIFIED] This report has been digitally signed by the doctor.`);
@@ -111,6 +158,7 @@ const PatientDashboard = () => {
                 lines.push(`[PENDING VERIFICATION] results are preliminary.`);
             }
 
+            // Trigger Download
             const testName = fullReport.test_name || fullReport.result?.testName || 'Unknown_Test';
             const fileContent = lines.join('\n');
             const blob = new Blob([fileContent], { type: 'text/plain' });
@@ -119,7 +167,7 @@ const PatientDashboard = () => {
             a.href = url;
             a.download = `Lab_Report_${testName.replace(/\s+/g, '_')}_${fullReport.report_id}.txt`;
             document.body.appendChild(a);
-            a.click();
+            a.click(); // Programmatic click
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
 
@@ -153,7 +201,8 @@ const PatientDashboard = () => {
 
             {/* Main Content - Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column - Appointments */}
+
+                {/* Left Column - Upcoming Appointments */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-slate-800 text-lg">Upcoming Appointments</h3>
@@ -199,7 +248,41 @@ const PatientDashboard = () => {
                                             {appointment.reason}
                                         </div>
                                     )}
+
+                                    {/* Pay Now Button (Only for scheduled appointments that are not paid/cancelled) */}
+                                    {appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED' && appointment.status !== 'PAID' && (
+                                        <div className="mt-3 flex justify-end">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handlePayNow(appointment);
+                                                }}
+                                                className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 transition-colors shadow-sm flex items-center"
+                                            >
+                                                Pay Now
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Paid Status & Slip View */}
+                                    {appointment.status === 'PAID' && (
+                                        <div className="mt-3 flex justify-between items-center bg-teal-100/30 p-2 rounded">
+                                            <span className="text-xs font-semibold text-teal-700 flex items-center">
+                                                <CheckCircle className="h-3 w-3 mr-1" /> Paid
+                                            </span>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setViewingSlip(appointment);
+                                                }}
+                                                className="px-3 py-1 text-xs font-medium text-teal-700 bg-white border border-teal-200 rounded hover:bg-teal-50 transition-colors"
+                                            >
+                                                View Slip
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
+
                             ))}
                         </div>
                     ) : (
@@ -209,7 +292,7 @@ const PatientDashboard = () => {
                         </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-slate-100">
+                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
                         <Link
                             to="/book-appointment"
                             className="flex items-center justify-center w-full py-2 px-4 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm"
@@ -222,7 +305,7 @@ const PatientDashboard = () => {
 
                 {/* Right Column - Lab Reports & Quick Actions */}
                 <div className="space-y-6">
-                    {/* Lab Reports */}
+                    {/* Lab Reports Section */}
                     <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-slate-800 text-lg">Recent Lab Reports</h3>
@@ -331,6 +414,7 @@ const PatientDashboard = () => {
                             </button>
                         </div>
 
+                        {/* Result Content Rendering */}
                         <div className="space-y-2">
                             {(() => {
                                 const renderRow = (key, value) => (
@@ -406,6 +490,7 @@ const PatientDashboard = () => {
                 onClose={() => setViewingAppointment(null)}
                 title="Appointment Details"
             >
+                {/* Modal logic same as before... */}
                 {viewingAppointment && (
                     <div className="space-y-4">
                         <div className="bg-teal-50 p-4 rounded-md border border-teal-100">
@@ -453,7 +538,62 @@ const PatientDashboard = () => {
                 )}
             </Modal>
 
-        </div>
+            {/* Payment Slip Modal */}
+            <Modal
+                isOpen={!!viewingSlip}
+                onClose={() => setViewingSlip(null)}
+                title="Payment Slip"
+            >
+                {viewingSlip && (
+                    <div className="space-y-4">
+                        <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 text-center relative overflow-hidden">
+                            {/* Decorative background element */}
+                            <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-emerald-200 rounded-full opacity-20"></div>
+                            <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-emerald-200 rounded-full opacity-20"></div>
+
+                            <div className="relative z-10 mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 mb-4 shadow-sm border border-emerald-200">
+                                <CheckCircle className="h-8 w-8 text-emerald-600" />
+                            </div>
+                            <h4 className="relative z-10 font-bold text-emerald-900 text-2xl tracking-tight">Payment Successful</h4>
+                            <p className="relative z-10 text-emerald-700 text-sm mt-1 font-medium">Thank you for your payment.</p>
+                        </div>
+
+                        <div className="border-t border-b border-slate-100 py-5 space-y-4 px-2">
+                            <div className="flex justify-between items-start text-sm">
+                                <span className="text-slate-500 font-medium">Service</span>
+                                <span className="font-semibold text-slate-800 text-right">Consultation with<br />{viewingSlip.doctor_name || 'Doctor'}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Date</span>
+                                <span className="font-semibold text-slate-800">
+                                    {new Date(viewingSlip.scheduled_start).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' })}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Status</span>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 uppercase tracking-widest shadow-sm">
+                                    Paid
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-500 font-medium">Reference Code</span>
+                                <span className="font-mono text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-1 rounded shadow-inner tracking-wider">
+                                    {viewingSlip.appointment_id?.split('-')[0].toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50 p-5 rounded-xl flex justify-between items-center border border-slate-200 shadow-inner">
+                            <span className="font-semibold text-slate-500 uppercase tracking-widest text-xs">Total Amount</span>
+                            <span className="font-black text-emerald-700 text-3xl tracking-tight leading-none text-shadow-sm">
+                                ${viewingSlip.consultation_fee || '50.00'}
+                            </span>
+                        </div>
+                    </div>
+                )}
+            </Modal>
+
+        </div >
     );
 };
 
