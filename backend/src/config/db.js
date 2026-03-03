@@ -13,9 +13,30 @@ const pool = new Pool({
   },
 });
 
-// Test connection at startup
+/**
+ * Handle Pool-Level Errors
+ * 
+ * Neon serverless PostgreSQL may close idle connections at any time.
+ * Without this handler, the pool emits an unhandled 'error' event
+ * which crashes the Node.js process.
+ */
+pool.on("error", (err) => {
+  console.error("⚠️  Unexpected pool error (Neon may have closed an idle connection):", err.message);
+});
+
+/**
+ * Test Database Connection
+ * 
+ * Attempts to establish a connection when the module loads.
+ * The client MUST be released back to the pool after testing,
+ * otherwise the idle connection will be terminated by Neon
+ * and trigger an unhandled error.
+ */
 pool.connect()
-  .then(() => console.log("PostgreSQL (Neon) connected successfully ✅"))
+  .then((client) => {
+    console.log("PostgreSQL (Neon) connected successfully ✅");
+    client.release(); // Release the client back to the pool
+  })
   .catch((err) => {
     console.error("PostgreSQL connection failed ❌");
     console.error(err);

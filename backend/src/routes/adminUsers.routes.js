@@ -138,7 +138,7 @@ router.post(
       // 2️⃣ Hash password with bcrypt
       const passwordHash = await bcrypt.hash(password, 10);
 
-      // 3️⃣ Create user record in users table
+      // 3️⃣ Create user record in users table (MFA enabled by default)
       const userResult = await client.query(
         `
         INSERT INTO users (

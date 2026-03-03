@@ -14,6 +14,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import TelemedicinePage from './pages/TelemedicinePage';
 import MessagesPage from './pages/MessagesPage';
+import VitalsDashboard from './pages/VitalsDashboard';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import AIBotPage from './pages/AIBotPage';
@@ -39,6 +40,14 @@ function App() {
 
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route
+              path="/vitals-dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Nurse', 'NURSE', 'Patient', 'PATIENT']}>
+                  <VitalsDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/patient/:id/diagnosis"
               element={

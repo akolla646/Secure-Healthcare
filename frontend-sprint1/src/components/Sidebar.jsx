@@ -23,6 +23,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     const navItems = {
         Doctor: [
             { name: 'Patient Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: 'Vitals Dashboard', path: '/vitals-dashboard', icon: Activity },
             { name: 'My Patients', path: '/patients', icon: Users }, // Placeholder
             { name: 'Diagnosis & EHR', path: '/ehr', icon: Stethoscope }, // Placeholder
             { name: '🤖 AI Care Advisor', path: '/ai-bot', icon: Activity },
@@ -41,6 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ],
         Nurse: [
             { name: 'Ward Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: 'Vitals Dashboard', path: '/vitals-dashboard', icon: Activity },
             { name: 'Vitals Monitoring', path: '/nurse/vitals', icon: Activity },
         ],
         Staff: [
@@ -48,8 +50,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         ]
     };
 
-    // Fallback if role not found
-    const currentNav = navItems[user?.role] || navItems['Staff'];
+    // Fallback if role not found — normalize to title case (JWT sends 'DOCTOR', keys are 'Doctor')
+    const normalizedRole = user?.role
+        ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+        : null;
+    const currentNav = navItems[normalizedRole] || navItems['Staff'];
 
     const isActive = (path) => location.pathname === path || (path !== '/dashboard' && location.pathname.startsWith(path));
 
