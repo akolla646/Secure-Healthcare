@@ -27,21 +27,22 @@ import {
 // =============================================================================
 
 const THRESHOLDS = {
-    heart_rate: { low: 60, high: 100, unit: 'bpm', label: 'Heart Rate' },
-    spo2: { low: 95, high: 101, unit: '%', label: 'SpO2' },
-    temperature: { low: 36.1, high: 37.5, unit: '°C', label: 'Temperature' },
+    heart_rate: { low: 60, high: 100, amberLow: 55, amberHigh: 110, unit: 'bpm', label: 'Heart Rate' },
+    spo2: { low: 95, high: 101, amberLow: 92, amberHigh: 102, unit: '%', label: 'SpO2' },
+    temperature: { low: 36.1, high: 37.5, amberLow: 35.5, amberHigh: 38.0, unit: '°C', label: 'Temperature' },
 };
 
 /**
  * Determine traffic-light status for a metric
+ * Red = outside amber range, Amber = between amber and normal, Green = within normal
  * @returns {'green' | 'amber' | 'red'}
  */
 function getStatus(metric, value) {
     if (value == null) return 'gray';
     const t = THRESHOLDS[metric];
     if (!t) return 'gray';
-    if (value < t.low || value > t.high) return 'red';
-    if (value <= t.low + 3 || value >= t.high - 2) return 'amber';
+    if (value < t.amberLow || value > t.amberHigh) return 'red';
+    if (value < t.low || value > t.high) return 'amber';
     return 'green';
 }
 
