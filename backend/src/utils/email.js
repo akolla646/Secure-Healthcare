@@ -35,16 +35,17 @@ if (
 // SMTP TRANSPORTER
 // =============================================================================
 
+const smtpPort = parseInt(process.env.SMTP_PORT, 10) || 465;
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT, 10) || 587,
-  secure: false,      // false = STARTTLS on port 587; true = SSL on port 465
+  port: smtpPort,
+  secure: smtpPort === 465,   // true = SSL on port 465; false = STARTTLS on port 587
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
   tls: {
-    rejectUnauthorized: false,  // relaxed for local development
+    rejectUnauthorized: false,
   },
 });
 
