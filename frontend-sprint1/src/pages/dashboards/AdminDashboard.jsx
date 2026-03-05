@@ -11,6 +11,7 @@
 import { useState, useEffect } from "react";
 import { Users, FileText, AlertTriangle, CheckCircle, Search, Trash2, Plus } from 'lucide-react';
 import axios from 'axios';
+import api from '../../../api/client'; // Added to use preconfigured client
 import { useNavigate, Link } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -75,15 +76,15 @@ const AdminDashboard = () => {
             const config = { headers: { Authorization: `Bearer ${token}` } };
 
             // 1. Fetch Users
-            const usersRes = await axios.get("http://localhost:5000/admin/users", config);
+            const usersRes = await api.get("/admin/users", config);
             setUsers(usersRes.data);
 
             // 2. Fetch Recent Logs (Limit 5)
-            const logsRes = await axios.get("http://localhost:5000/admin/audit-logs?limit=5", config);
+            const logsRes = await api.get("/admin/audit-logs?limit=5", config);
             setLogs(logsRes.data.logs);
 
             // 3. Fetch Audit Summary for Total Count (More efficient than fetching all logs)
-            const summaryRes = await axios.get("http://localhost:5000/admin/audit-logs/summary", config);
+            const summaryRes = await api.get("/admin/audit-logs/summary", config);
 
             // Update stats state
             setStats({
@@ -111,7 +112,7 @@ const AdminDashboard = () => {
         if (!window.confirm("Are you sure you want to delete this user?")) return;
 
         try {
-            await axios.delete(`http://localhost:5000/admin/users/${userId}`, {
+            await api.delete(`/admin/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -134,7 +135,7 @@ const AdminDashboard = () => {
         setError("");
 
         try {
-            await axios.post("http://localhost:5000/admin/users", formData, {
+            await api.post("/admin/users", formData, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

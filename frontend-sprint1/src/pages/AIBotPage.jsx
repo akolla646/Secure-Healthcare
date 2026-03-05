@@ -1,8 +1,9 @@
 import AIBotPanel from '../components/aiBot/AIBotPanel';
 import { ArrowLeft } from 'lucide-react';
+import clientApi from '../api/client';
 import { Link } from 'react-router-dom';
 
-const API_BASE_URL = 'http://localhost:5000'; // Match backend config
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Match backend config
 
 function AIBotPage() {
     return (

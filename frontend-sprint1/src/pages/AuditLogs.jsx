@@ -36,13 +36,15 @@ const AuditLogs = () => {
         setLoading(true);
         setError("");
         try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
+            // const config = { headers: { Authorization: `Bearer ${token}` } }; // Original line
+            const config = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
             const offset = page * limit;
 
             // API Call: GET /admin/audit-logs
-            const res = await axios.get(`http://localhost:5000/admin/audit-logs?limit=${limit}&offset=${offset}`, config);
+            // const res = await axios.get(`http://localhost:5000/admin/audit-logs?limit=${limit}&offset=${offset}`, config); // Original line
+            const res = await api.get(`/admin/audit-logs?limit=${limit}&offset=${offset}`, config);
 
-            setLogs(res.data.logs);
+            setLogs(res.data.logs || []);
             setTotal(res.data.count);
         } catch (err) {
             console.error("Failed to fetch logs", err);

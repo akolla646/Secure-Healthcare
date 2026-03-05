@@ -49,7 +49,11 @@ require("./config/db");
 // =============================================================================
 
 // Enable CORS for all routes - allows frontend to make API requests
-app.use(cors());
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
 // Webhook route must be parsed as raw JSON, so we define it BEFORE the general json middleware
 app.use((req, res, next) => {

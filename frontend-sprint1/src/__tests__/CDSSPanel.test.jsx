@@ -16,7 +16,7 @@ describe('CDSSPanel Component', () => {
     const renderCDSSPanel = () => {
         return render(
             <BrowserRouter>
-                <CDSSPanel apiBase="http://localhost:3000/api" />
+                <CDSSPanel apiBase={import.meta.env.VITE_API_URL || 'http://localhost:5000/api'} />
             </BrowserRouter>
         );
     };
