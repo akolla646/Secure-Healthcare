@@ -1,0 +1,75 @@
+PASS tests/ocr.service.test.js
+  cleanPrescriptionText
+    √ returns empty result for null/undefined input (10 ms)
+    √ returns empty result for non-string input (3 ms)
+    √ normalizes whitespace in prescription text (4 ms)
+    √ corrects common OCR abbreviations (Tab → Tablet) (3 ms)
+    √ assesses quality as good for valid prescription text (2 ms)
+    √ includes stats in the result (2 ms)
+  extractMedications
+    √ extracts a known medication from text (5 ms)
+    √ extracts dosage information (2 ms)
+    √ extracts frequency information (2 ms)
+    √ returns empty array when no medications found (3 ms)
+    √ extracts multiple medications (3 ms)
+  extractDiagnosisCodes
+    √ extracts diabetes ICD-10 code (E11) (2 ms)
+    √ extracts hypertension code (I10) (2 ms)
+    √ extracts multiple diagnosis codes (1 ms)
+    √ returns empty array when no codes present (1 ms)
+  extractPatientInfo
+    √ extracts patient name (2 ms)
+    √ extracts patient age (2 ms)
+    √ extracts gender (3 ms)
+    √ extracts date from prescription (2 ms)
+    √ returns null fields when info not found (1 ms)
+  processPrescriptionImage
+    √ runs full pipeline with mocked OCR (3 ms)
+    √ throws error when OCR fails (31 ms)
+
+PASS tests/ocr.controller.test.js
+  uploadPrescription
+    √ returns 400 when no file uploaded (9 ms)
+    √ returns 400 for unsupported file type (2 ms)
+    √ returns OCR result on success (poor quality, no DB save) (5 ms)
+    √ returns 500 when service throws (3 ms)
+  generatePlanFromPrescription
+    √ returns 400 when diagnosisCode missing (2 ms)
+    √ returns 400 when diagnosis code not in knowledge graph (2 ms)
+  getHistory
+    √ returns history on success (2 ms)
+    √ returns 500 when DB fails (1 ms)
+  getById
+    √ returns 404 when ID not found (1 ms)
+    √ returns record when found (2 ms)
+
+
+PASS tests/prescriptions.controller.test.js
+  createPrescription
+    √ returns 201 on success (5 ms)
+    √ returns error status from service error (2 ms)
+  getByAppointment
+    √ returns prescriptions for appointment (2 ms)
+    √ returns 500 on unexpected error (2 ms)
+  getByPatient
+    √ returns prescriptions for patient (1 ms)
+    √ returns 403 when access denied (2 ms)
+
+PASS tests/prescriptions.service.test.js
+  createPrescription
+    √ throws 403 when user is not a doctor (6 ms)
+    √ throws 404 when appointment not found (1 ms)
+    √ throws 403 when doctor not assigned to appointment (1 ms)
+    √ creates prescription successfully (3 ms)
+    √ rolls back transaction on insert error (11 ms)
+  getByAppointment
+    √ returns prescriptions for an appointment (2 ms)
+  getByPatient
+    √ returns prescriptions for a patient (9 ms)
+    √ throws 403 when patient views other patient prescriptions (2 ms)
+
+Test Suites: 4 passed, 4 total
+Tests:       46 passed, 46 total
+Snapshots:   0 total
+Time:        1.379 s
+Ran all test suites matching tests/ocr.service.test.js|tests/ocr.controller.test.js|tests/prescriptions.service.test.js|tests/prescriptions.controller.test.js.
