@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from "react";
-import axios from 'axios';
+import api from '../api/client';
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search, AlertTriangle, ArrowLeft } from "lucide-react";
 
@@ -36,12 +36,10 @@ const AuditLogs = () => {
         setLoading(true);
         setError("");
         try {
-            // const config = { headers: { Authorization: `Bearer ${token}` } }; // Original line
             const config = { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } };
             const offset = page * limit;
 
             // API Call: GET /admin/audit-logs
-            // const res = await axios.get(`http://localhost:5000/admin/audit-logs?limit=${limit}&offset=${offset}`, config); // Original line
             const res = await api.get(`/admin/audit-logs?limit=${limit}&offset=${offset}`, config);
 
             setLogs(res.data.logs || []);
