@@ -11,7 +11,7 @@
 import { useState, useEffect } from "react";
 import { Users, FileText, AlertTriangle, CheckCircle, Search, Trash2, Plus } from 'lucide-react';
 import axios from 'axios';
-import api from '../../../api/client'; // Added to use preconfigured client
+import api from '../../api/client'; // Added to use preconfigured client
 import { useNavigate, Link } from "react-router-dom";
 
 const AdminDashboard = () => {
