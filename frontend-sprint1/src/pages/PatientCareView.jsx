@@ -54,18 +54,18 @@ const PatientCareView = () => {
 
     // If no plan, show the CDSS Panel to generate one
     return (
-        <div className="min-h-screen bg-slate-900 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-8 px-4 sm:px-6 lg:px-8 bg-slate-50 min-h-screen">
             <div className="max-w-4xl mx-auto">
                 <div className="mb-8">
                     <button
                         onClick={() => navigate('/dashboard')}
-                        className="flex items-center text-slate-400 hover:text-white transition mb-4"
+                        className="flex items-center text-slate-600 hover:text-slate-900 transition mb-4"
                     >
                         <ArrowLeft className="h-5 w-5 mr-2" />
                         Back to Dashboard
                     </button>
-                    <h1 className="text-2xl font-bold text-white mb-2">My Care Plan</h1>
-                    <p className="text-slate-400">Generate your personalized care plan using your secure diagnosis file.</p>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-2">My Care Plan</h1>
+                    <p className="text-slate-500">Generate your personalized care plan using your secure diagnosis file.</p>
                 </div>
 
                 <CDSSPanel

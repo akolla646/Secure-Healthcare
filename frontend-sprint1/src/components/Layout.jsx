@@ -33,8 +33,6 @@ const Layout = () => {
                                 >
                                     <Menu className="h-6 w-6" />
                                 </button>
-                                <ShieldCheck className="h-8 w-8 text-primary-600" />
-                                <span className="ml-2 text-xl font-bold text-slate-900">Secure Health</span>
                             </div>
                             <div className="flex items-center space-x-4">
                                 {['DOCTOR', 'NURSE', 'PATIENT'].includes(user?.role?.toUpperCase()) && (

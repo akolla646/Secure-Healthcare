@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api, { createCheckoutSession } from '../../api/client';
 import Modal from '../../components/Modal';
+import VitalsSummary from '../../components/VitalsSummary';
 
 const PatientDashboard = () => {
     const { user } = useAuth();
@@ -199,42 +200,45 @@ const PatientDashboard = () => {
                 </p>
             </div>
 
+            {/* Vitals Trends Summary */}
+            <VitalsSummary patientId={user?.sub || user?.patient_id} />
+
             {/* Main Content - Two Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
                 {/* Left Column - Upcoming Appointments */}
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-slate-800 text-lg">Upcoming Appointments</h3>
+                <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                    <div className="px-4 py-5 sm:px-6 border-b border-slate-200 flex items-center justify-between">
+                        <h3 className="text-lg leading-6 font-medium text-slate-900">Upcoming Appointments</h3>
                         <Calendar className="h-5 w-5 text-teal-500" />
                     </div>
 
                     {appointments.length > 0 ? (
-                        <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                        <ul className="divide-y divide-slate-200 max-h-[400px] overflow-y-auto w-full">
                             {appointments.map((appointment, index) => (
-                                <div
+                                <li
                                     key={appointment.appointment_id || index}
-                                    className="p-4 bg-teal-50 rounded-lg border border-teal-100 hover:bg-teal-100 transition cursor-pointer"
+                                    className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out cursor-pointer"
                                     onClick={() => setViewingAppointment(appointment)}
                                 >
                                     <div className="flex justify-between items-start">
                                         <div className="flex-1">
-                                            <div className="font-medium text-teal-900">
+                                            <div className="text-sm font-medium text-teal-600 truncate">
                                                 {appointment.doctor_name || 'Doctor'}
                                             </div>
-                                            <div className="text-sm text-teal-700">
+                                            <div className="text-sm text-slate-500">
                                                 {appointment.specialization || 'General'}
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-sm font-medium text-teal-800">
+                                            <div className="px-2 inline-flex text-xs leading-5 font-bold rounded-full bg-slate-100 text-slate-800">
                                                 {new Date(appointment.scheduled_start).toLocaleDateString([], {
                                                     month: 'short',
                                                     day: 'numeric',
                                                     year: 'numeric'
                                                 })}
                                             </div>
-                                            <div className="text-xs text-teal-600 flex items-center justify-end mt-1">
+                                            <div className="text-xs text-slate-400 flex items-center justify-end mt-1">
                                                 <Clock className="h-3 w-3 mr-1" />
                                                 {new Date(appointment.scheduled_start).toLocaleTimeString([], {
                                                     hour: '2-digit',
@@ -244,7 +248,7 @@ const PatientDashboard = () => {
                                         </div>
                                     </div>
                                     {appointment.reason && (
-                                        <div className="mt-2 text-xs text-teal-600 bg-teal-100/50 px-2 py-1 rounded">
+                                        <div className="mt-2 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100">
                                             {appointment.reason}
                                         </div>
                                     )}
@@ -257,7 +261,7 @@ const PatientDashboard = () => {
                                                     e.stopPropagation();
                                                     handlePayNow(appointment);
                                                 }}
-                                                className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded hover:bg-indigo-700 transition-colors shadow-sm flex items-center"
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             >
                                                 Pay Now
                                             </button>
@@ -266,7 +270,7 @@ const PatientDashboard = () => {
 
                                     {/* Paid Status & Slip View */}
                                     {appointment.status === 'PAID' && (
-                                        <div className="mt-3 flex justify-between items-center bg-teal-100/30 p-2 rounded">
+                                        <div className="mt-3 flex justify-between items-center px-1">
                                             <span className="text-xs font-semibold text-teal-700 flex items-center">
                                                 <CheckCircle className="h-3 w-3 mr-1" /> Paid
                                             </span>
@@ -275,16 +279,16 @@ const PatientDashboard = () => {
                                                     e.stopPropagation();
                                                     setViewingSlip(appointment);
                                                 }}
-                                                className="px-3 py-1 text-xs font-medium text-teal-700 bg-white border border-teal-200 rounded hover:bg-teal-50 transition-colors"
+                                                className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 shadow-sm text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                             >
                                                 View Slip
                                             </button>
                                         </div>
                                     )}
-                                </div>
+                                </li>
 
                             ))}
-                        </div>
+                        </ul>
                     ) : (
                         <div className="text-slate-500 italic py-8 text-center">
                             <Calendar className="h-12 w-12 mx-auto mb-3 text-slate-300" />
@@ -292,12 +296,12 @@ const PatientDashboard = () => {
                         </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-slate-100 space-y-3">
+                    <div className="bg-slate-50 px-5 py-3 border-t border-slate-200 w-full text-center">
                         <Link
                             to="/book-appointment"
-                            className="flex items-center justify-center w-full py-2 px-4 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition font-medium text-sm"
+                            className="font-medium text-indigo-600 hover:text-indigo-900 inline-flex items-center"
                         >
-                            <Calendar className="h-4 w-4 mr-2" />
+                            <Calendar className="h-4 w-4 mr-2 text-slate-400" />
                             Book New Appointment
                         </Link>
                     </div>
@@ -306,23 +310,23 @@ const PatientDashboard = () => {
                 {/* Right Column - Lab Reports & Quick Actions */}
                 <div className="space-y-6">
                     {/* Lab Reports Section */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-slate-800 text-lg">Recent Lab Reports</h3>
-                            <Beaker className="h-5 w-5 text-purple-500" />
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div className="bg-white px-4 py-5 sm:px-6 border-b border-slate-200 flex items-center justify-between">
+                            <h3 className="text-lg leading-6 font-medium text-slate-900">Recent Lab Reports</h3>
+                            <Beaker className="h-5 w-5 text-purple-600" />
                         </div>
                         {labReports.length > 0 ? (
-                            <div className="space-y-3 max-h-[250px] overflow-y-auto">
+                            <ul className="divide-y divide-slate-200 max-h-[250px] overflow-y-auto w-full">
                                 {labReports.map((report) => (
-                                    <div
+                                    <li
                                         key={report.report_id}
-                                        className="p-3 bg-purple-50 rounded-md border border-purple-100 cursor-pointer hover:bg-purple-100 transition group"
+                                        className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out cursor-pointer"
                                         onClick={() => handleViewReport(report.report_id)}
                                     >
                                         <div className="flex justify-between items-start">
                                             <div>
-                                                <div className="font-medium text-purple-900">{report.test_name}</div>
-                                                <div className="text-xs text-purple-700 mt-1">
+                                                <div className="text-sm font-medium text-purple-600 truncate">{report.test_name}</div>
+                                                <div className="text-sm text-slate-500 mt-1">
                                                     {new Date(report.verified_at || report.ordered_at).toLocaleDateString()}
                                                 </div>
                                             </div>
@@ -346,9 +350,9 @@ const PatientDashboard = () => {
                                                 </button>
                                             </div>
                                         </div>
-                                    </div>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         ) : (
                             <div className="text-slate-500 italic py-6 text-center">
                                 <Beaker className="h-10 w-10 mx-auto mb-2 text-slate-300" />
@@ -358,27 +362,33 @@ const PatientDashboard = () => {
                     </div>
 
                     {/* Quick Actions */}
-                    <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                        <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
-                        <div className="space-y-2">
-                            <Link
-                                to="/ai-bot"
-                                className="flex items-center justify-between w-full p-4 text-left text-sm text-purple-700 bg-purple-50 hover:bg-purple-100 rounded-lg transition border border-purple-100 shadow-sm"
-                            >
-                                <div className="flex items-center font-medium">
-                                    <Sparkles className="h-5 w-5 mr-3 text-purple-500" />
-                                    Launch AI Care Advisor
-                                </div>
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
-                            <Link
-                                to={`/patient/${user?.sub}/care-plan`}
-                                className="flex items-center justify-between w-full p-3 text-left text-sm text-slate-600 hover:bg-slate-50 rounded-md transition border border-slate-100 mt-2"
-                            >
-                                <span className="font-medium">View my Care Plan</span>
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
+                    <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                        <div className="bg-white px-4 py-5 sm:px-6 border-b border-slate-200">
+                            <h3 className="text-lg leading-6 font-medium text-slate-900">Quick Actions</h3>
                         </div>
+                        <ul className="divide-y divide-slate-200">
+                            <li className="px-4 py-4 hover:bg-slate-50 transition duration-150 ease-in-out">
+                                <Link
+                                    to="/ai-bot"
+                                    className="flex items-center justify-between w-full text-left text-sm text-purple-700"
+                                >
+                                    <div className="flex items-center font-medium">
+                                        <Sparkles className="h-5 w-5 mr-3 text-purple-500" />
+                                        Launch AI Care Advisor
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-purple-400" />
+                                </Link>
+                            </li>
+                            <li className="px-4 py-4 hover:bg-slate-50 transition duration-150 ease-in-out">
+                                <Link
+                                    to={`/patient/${user?.sub}/care-plan`}
+                                    className="flex items-center justify-between w-full text-left text-sm text-slate-600"
+                                >
+                                    <span className="font-medium">View my Care Plan</span>
+                                    <ArrowRight className="h-4 w-4 text-slate-400" />
+                                </Link>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </div>

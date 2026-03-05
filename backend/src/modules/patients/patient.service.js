@@ -264,8 +264,25 @@ async function registerPatientWithUser(data) {
   return patientResult.rows[0];
 }
 
+/**
+ * Get Patient Record by User ID
+ * 
+ * Retrieves the patient record associated with a specific user account.
+ * 
+ * @param {string} userId - User UUID
+ * @returns {Object|null} Patient record or null if not found
+ */
+async function getPatientByUserId(userId) {
+  const result = await pool.query(
+    `SELECT * FROM patients WHERE user_id = $1 AND deleted_at IS NULL`,
+    [userId]
+  );
+  return result.rows[0] || null;
+}
+
 module.exports = {
   createPatient,
   getAllPatients,
-  registerPatientWithUser
+  registerPatientWithUser,
+  getPatientByUserId
 };

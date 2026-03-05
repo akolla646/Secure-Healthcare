@@ -19,24 +19,19 @@ import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
 import DoctorAvailability from './pages/DoctorAvailability';
 import AuditLogs from './pages/AuditLogs';
-<<<<<<< HEAD
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import TelemedicinePage from './pages/TelemedicinePage';
 import MessagesPage from './pages/MessagesPage';
 import VitalsDashboard from './pages/VitalsDashboard';
 import PrescriptionOCR from './pages/PrescriptionOCR';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
 import AIBotPage from './pages/AIBotPage';
-=======
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentCancel from './pages/PaymentCancel';
 
 // Import Components
 import Layout from './components/Layout'; // Common layout for dashboard pages
 import ProtectedRoute from './components/ProtectedRoute'; // Guard component for secure routes
->>>>>>> origin/Payment-(Stripe)
 
 function App() {
   return (
@@ -154,7 +149,7 @@ function App() {
             <Route
               path="/ai-bot"
               element={
-                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                <ProtectedRoute allowedRoles={['Patient', 'PATIENT']}>
                   <AIBotPage />
                 </ProtectedRoute>
               }
@@ -162,7 +157,7 @@ function App() {
             <Route
               path="/prescription-ocr"
               element={
-                <ProtectedRoute allowedRoles={['Doctor', 'DOCTOR', 'Patient', 'PATIENT']}>
+                <ProtectedRoute allowedRoles={['Patient', 'PATIENT']}>
                   <PrescriptionOCR />
                 </ProtectedRoute>
               }

@@ -106,7 +106,7 @@ const LabTechDashboard = () => {
 
             {/* Pending Orders List */}
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <div className="bg-white px-4 py-5 border-b border-slate-200 sm:px-6 flex justify-between items-center">
+                <div className="bg-white px-4 py-5 sm:px-6 border-b border-slate-200 flex items-center justify-between">
                     <h3 className="text-lg leading-6 font-medium text-slate-900 flex items-center">
                         <FileText className="h-5 w-5 text-teal-600 mr-2" />
                         Pending Lab Orders
@@ -123,40 +123,38 @@ const LabTechDashboard = () => {
                         </li>
                     ) : (
                         orders.map((order) => (
-                            <li key={order.order_id}>
-                                <div className="block hover:bg-slate-50">
-                                    <div className="px-4 py-4 sm:px-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center">
-                                                <p className="text-sm font-medium text-teal-600 truncate">
-                                                    {order.test_name || "Unknown Test"}
-                                                </p>
-                                                <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800`}>
-                                                    {order.status}
-                                                </span>
-                                            </div>
-                                            <div className="ml-2 flex-shrink-0 flex">
-                                                <p className="px-2 inline-flex text-xs leading-5 font-bold rounded-full bg-slate-100 text-slate-800">
-                                                    {new Date(order.ordered_at).toLocaleDateString()}
-                                                </p>
-                                            </div>
+                            <li key={order.order_id} className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out">
+                                <div className="block">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                            <p className="text-sm font-medium text-teal-600 truncate">
+                                                {order.test_name || "Unknown Test"}
+                                            </p>
+                                            <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800`}>
+                                                {order.status}
+                                            </span>
                                         </div>
-                                        <div className="mt-2 sm:flex sm:justify-between">
-                                            <div className="sm:flex">
-                                                <p className="flex items-center text-sm text-slate-500">
-                                                    <User className="flex-shrink-0 mr-1.5 h-4 w-4 text-slate-400" />
-                                                    {/* We only have ID or encrypted name here usually, relying on backend join */}
-                                                    Patient ID: {order.patient_id}
-                                                </p>
-                                            </div>
-                                            <div className="mt-2 flex items-center text-sm text-slate-500 sm:mt-0">
-                                                <button
-                                                    onClick={() => handleUploadDefault(order)}
-                                                    className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-                                                >
-                                                    Upload Results
-                                                </button>
-                                            </div>
+                                        <div className="ml-2 flex-shrink-0 flex">
+                                            <p className="px-2 inline-flex text-xs leading-5 font-bold rounded-full bg-slate-100 text-slate-800">
+                                                {new Date(order.ordered_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 sm:flex sm:justify-between">
+                                        <div className="sm:flex">
+                                            <p className="flex items-center text-sm text-slate-500">
+                                                <User className="flex-shrink-0 mr-1.5 h-4 w-4 text-slate-400" />
+                                                {/* We only have ID or encrypted name here usually, relying on backend join */}
+                                                Patient ID: {order.patient_id}
+                                            </p>
+                                        </div>
+                                        <div className="mt-2 flex items-center text-sm text-slate-500 sm:mt-0">
+                                            <button
+                                                onClick={() => handleUploadDefault(order)}
+                                                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+                                            >
+                                                Upload Results
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -213,8 +211,9 @@ const LabTechDashboard = () => {
                         </div>
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 };
 

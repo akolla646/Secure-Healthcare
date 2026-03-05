@@ -14,6 +14,13 @@ import { ClipboardList, Activity, Clock, UserCheck } from 'lucide-react';
 const NurseDashboard = () => {
     return (
         <div className="space-y-6">
+            <div className="md:flex md:items-center md:justify-between">
+                <div className="flex-1 min-w-0">
+                    <h2 className="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate">
+                        Nurse Dashboard
+                    </h2>
+                </div>
+            </div>
             {/* Status Overview Cards */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 {/* Assigned Patients Count */}
@@ -78,13 +85,13 @@ const NurseDashboard = () => {
             </div>
 
             {/* Upcoming Tasks List (Mock Data) */}
-            <div className="bg-white shadow sm:rounded-lg">
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
                 <div className="px-4 py-5 sm:px-6 border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Upcoming Rounds / Meds</h3>
                 </div>
                 <ul className="divide-y divide-slate-200">
                     {[1, 2, 3].map(i => (
-                        <li key={i} className="px-4 py-4 sm:px-6 hover:bg-slate-50">
+                        <li key={i} className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out cursor-pointer">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-slate-900">Room 30{i} - Bed 1</p>

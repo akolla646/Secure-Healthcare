@@ -235,8 +235,8 @@ const AdminDashboard = () => {
             </div>
 
             {/* User Management Section */}
-            <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-slate-200">
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <div className="bg-white px-4 py-5 sm:px-6 flex justify-between items-center border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Manage Users</h3>
 
                     {/* Search and Add Actions */}
@@ -296,13 +296,13 @@ const AdminDashboard = () => {
             </div>
 
             {/* Recent Audit Logs (Preview) */}
-            <div className="bg-white shadow sm:rounded-lg">
-                <div className="px-4 py-5 sm:px-6 border-b border-slate-200">
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <div className="bg-white px-4 py-5 sm:px-6 border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Recent Audit Logs</h3>
                 </div>
                 <ul className="divide-y divide-slate-200">
                     {logs.map((log) => (
-                        <li key={log.audit_id} className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition-colors">
+                        <li key={log.audit_id} className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <AlertTriangle className={`h-5 w-5 mr-3 ${log.action.includes('FAIL') || log.action.includes('DENIED') ? 'text-red-500' : 'text-slate-400'}`} />

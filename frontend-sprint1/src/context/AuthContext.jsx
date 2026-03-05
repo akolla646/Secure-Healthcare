@@ -46,10 +46,9 @@ export const AuthProvider = ({ children }) => {
             }
             // If no MFA (should not happen based on current backend logic but safe to handle)
             if (response.data.token) {
-                const { token, role, user_id } = response.data;
-                localStorage.setItem('token', token);
-                setUser({ user_id, role, token });
-                return { success: true, role };
+                localStorage.setItem('token', response.data.token);
+                setUser({ ...response.data });
+                return { success: true, role: response.data.role };
             }
             return { success: false, message: 'Unexpected response' };
         } catch (error) {
@@ -73,10 +72,9 @@ export const AuthProvider = ({ children }) => {
             const response = await apiVerifyLoginOtp({ username, otp });
 
             if (response.data && response.data.token) {
-                const { token, role, user_id } = response.data;
-                localStorage.setItem('token', token);
-                setUser({ user_id, role, token });
-                return { success: true, role }; // Return role for redirect logic
+                localStorage.setItem('token', response.data.token);
+                setUser({ ...response.data });
+                return { success: true, role: response.data.role }; // Return role for redirect logic
             }
             return { success: false, message: 'Verification failed' };
         } catch (error) {

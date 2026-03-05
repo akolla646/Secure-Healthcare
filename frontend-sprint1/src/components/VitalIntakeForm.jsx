@@ -82,7 +82,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
     return (
         <div className="bg-white/80 backdrop-blur-sm shadow-lg rounded-2xl overflow-hidden border border-slate-200/60">
             {/* Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center">
+            <div className="px-6 py-4 bg-teal-600 flex items-center">
                 <Activity className="h-5 w-5 text-white mr-2" />
                 <h3 className="text-lg font-semibold text-white tracking-wide">
                     Record Vital Signs
@@ -126,7 +126,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                             })}
                             type="text"
                             placeholder="e.g., 550e8400-e29b-41d4-a716-446655440000"
-                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                         />
                         {errors.patient_id && (
                             <span className="text-xs text-red-500 mt-1">
@@ -149,7 +149,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                             })}
                             type="number"
                             placeholder="72"
-                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                         />
                         {errors.heart_rate && (
                             <span className="text-xs text-red-500 mt-1">
@@ -174,7 +174,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                             })}
                             type="text"
                             placeholder="120/80"
-                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                         />
                         {errors.blood_pressure && (
                             <span className="text-xs text-red-500 mt-1">
@@ -198,7 +198,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                             type="number"
                             step="0.1"
                             placeholder="36.6"
-                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                         />
                         {errors.temperature && (
                             <span className="text-xs text-red-500 mt-1">
@@ -221,7 +221,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                             })}
                             type="number"
                             placeholder="98"
-                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                            className="block w-full px-4 py-2.5 shadow-sm text-sm border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-shadow"
                         />
                         {errors.spo2 && (
                             <span className="text-xs text-red-500 mt-1">
@@ -235,7 +235,7 @@ const VitalIntakeForm = ({ patientId, onSuccess }) => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl shadow-md text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all duration-200"
+                            className="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl shadow-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 transition-all duration-200"
                         >
                             {isSubmitting ? (
                                 <>

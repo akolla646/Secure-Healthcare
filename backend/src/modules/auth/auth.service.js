@@ -18,6 +18,7 @@ exports.login = async (username, password) => {
     `
     SELECT 
       u.user_id,
+      u.username,
       u.password_hash,
       u.mfa_enabled,
       u.email, 
@@ -86,7 +87,13 @@ exports.login = async (username, password) => {
   /**
    * MFA DISABLED → ISSUE TOKEN
    */
-  return issueJWT(user.user_id, user.role_name);
+  let patientId = null;
+  if (user.role_name === 'PATIENT') {
+    const patient = await patientService.getPatientByUserId(user.user_id);
+    patientId = patient ? patient.patient_id : null;
+  }
+
+  return issueJWT(user.user_id, user.role_name, patientId, user.username);
 };
 
 /**
@@ -159,6 +166,7 @@ exports.verifyLoginOTP = async (username, otp) => {
     `
     SELECT 
       u.user_id,
+      u.username,
       r.role_name,
       eo.otp_id
     FROM email_otps eo
@@ -185,8 +193,13 @@ exports.verifyLoginOTP = async (username, otp) => {
     [user.otp_id]
   );
 
-  return issueJWT(user.user_id, user.role_name);
-  return issueJWT(user.user_id, user.role_name);
+  let patientId = null;
+  if (user.role_name === 'PATIENT') {
+    const patient = await patientService.getPatientByUserId(user.user_id);
+    patientId = patient ? patient.patient_id : null;
+  }
+
+  return issueJWT(user.user_id, user.role_name, patientId, user.username);
 };
 
 /**
@@ -586,12 +599,28 @@ exports.resetPassword = async (email, otp, newPassword) => {
 /**
  * ISSUE JWT
  */
-function issueJWT(userId, role) {
+function issueJWT(userId, role, patientId = null, username = null) {
+  const payload = {
+    user_id: userId,
+    sub: userId,
+    role,
+    name: username,
+    // Add patient_id if it's a patient, which the frontend needs for dashboards
+    ...(patientId && { patient_id: patientId })
+  };
+
   const token = jwt.sign(
-    { user_id: userId, role },
+    payload,
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
   );
 
-  return { token, role, user_id: userId };
+  return {
+    token,
+    role,
+    user_id: userId,
+    sub: userId,
+    name: username,
+    ...(patientId && { patient_id: patientId })
+  };
 }
