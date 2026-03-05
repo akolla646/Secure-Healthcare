@@ -14,7 +14,7 @@ const PatientCareView = () => {
     // Otherwise, start null to show the CDSS Panel for generation.
     const [plan, setPlan] = useState(state?.plan || null);
 
-    const API_BASE = '/api'; // Use proxy
+    const API_BASE = import.meta.env.VITE_API_URL || '/api'; // Use proxy
 
     // If we have a plan, render the display
     if (plan) {

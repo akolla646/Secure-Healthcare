@@ -26,7 +26,7 @@ import CarePlanDisplay from '../components/CarePlanDisplay';
 const PrescriptionOCR = () => {
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
-    const API_BASE = '/api';
+    const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
     // Helper: get auth token from localStorage
     const getAuthHeaders = () => ({
