@@ -63,14 +63,12 @@ describe('AuditLogs Component', () => {
     });
 
     it('handles error state', async () => {
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
         axios.get.mockRejectedValue(new Error('Network error'));
         renderAuditLogs();
 
         await waitFor(() => {
             expect(screen.getByText(/failed to load audit logs/i)).toBeInTheDocument();
         });
-        consoleSpy.mockRestore();
     });
 
     it('handles pagination', async () => {

@@ -26,8 +26,6 @@ vi.mock('lucide-react', () => ({
     CheckCircle: () => <span>CheckCircleIcon</span>,
     Loader2: () => <span>LoaderIcon</span>,
     Clock: () => <span>ClockIcon</span>,
-    MessageSquare: () => <span>MessageIcon</span>,
-    X: () => <span>XIcon</span>,
 }));
 
 // Mock useNavigate

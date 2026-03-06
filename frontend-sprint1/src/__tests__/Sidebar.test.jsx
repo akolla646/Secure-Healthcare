@@ -17,8 +17,6 @@ vi.mock('lucide-react', () => ({
     LogOut: () => <span>LogOutIcon</span>,
     Menu: () => <span>MenuIcon</span>,
     X: () => <span>XIcon</span>,
-    ScanLine: () => <span>ScanLineIcon</span>,
-    ShieldCheck: () => <span>ShieldCheckIcon</span>,
 }));
 
 // Mock Auth Context Hook
@@ -56,7 +54,7 @@ describe('Sidebar Component', () => {
     it('shows Doctor specific links', () => {
         renderSidebar('Doctor');
         expect(screen.getByText('Patient Dashboard')).toBeInTheDocument();
-        expect(screen.getByText('Vitals Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('My Patients')).toBeInTheDocument();
     });
 
     it('shows Patient specific links', () => {
