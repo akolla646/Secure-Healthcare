@@ -2,6 +2,8 @@
 
 A full-stack, role-based healthcare management platform built for Sprint 2 of the Software Engineering project. The system handles patient management, doctor appointments, telemedicine consultations, lab results, payments, prescriptions (with OCR), and AI-powered clinical decision support.
 
+🌐 **Live Demo:** [https://secure-healthcare-frontend.onrender.com](https://secure-healthcare-frontend.onrender.com)
+
 ---
 
 ## 📁 Project Structure
