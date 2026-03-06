@@ -1,160 +1,318 @@
-# Secure Healthcare System 🏥
+# 🏥 Secure Healthcare Management System
 
-> A secure, specialized Clinical Decision Support System (CDSS) for verifiable care plans and patient-doctor collaboration.
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-19.x-blue.svg)](https://reactjs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.x-blue.svg)](https://www.postgresql.org/)
+A full-stack, role-based healthcare management platform built for Sprint 2 of the Software Engineering project. The system handles patient management, doctor appointments, telemedicine consultations, lab results, payments, prescriptions (with OCR), and AI-powered clinical decision support.
 
 ---
 
-## 📖 Table of Contents
-- [Project Overview](#-project-overview)
-- [Key Features](#-key-features)
-- [Technology Stack](#-technology-stack)
-- [Directory Structure](#-directory-structure)
-- [Getting Started](#-getting-started)
-- [Environment Configuration](#-environment-configuration)
-- [Running the Application](#-running-the-application)
-- [Contributors](#-contributors)
+## 📁 Project Structure
 
----
-
-## 🚀 Project Overview
-
-**Secure Healthcare** is a modern web platform designed to bridge the gap between patient records and actionable clinical decisions. It features a **Clinical Decision Support System (CDSS)** that uses a rule-based engine to assist doctors in generating verifiable care plans.
-
-The system emphasizes security, ensuring that all patient data is encrypted and that interactions between patients and doctors are authenticated and logged.
-
----
-
-## ✨ Key Features
-
-*   **🤖 AI-Assisted CDSS:** Rule-based engine for generating care plans based on ICD-10 diagnosis codes.
-*   **🩺 Doctor Dashboard:** Comprehensive view for physicians to manage patients, verify lab reports, and sign off on treatments.
-*   **👤 Patient Portal:** Secure interface for patients to book appointments, upload lab reports, and view their care history.
-*   **🔒 Enterprise Security:** JWT-based authentication, Role-Based Access Control (RBAC), and encryption for Personally Identifiable Information (PII).
-*   **📄 Lab Report Parsing:** Automated regex-based parsing of uploaded lab reports to extract vital health metrics.
-
----
-
-## 🛠 Technology Stack
-
-### Frontend (User Interface)
-*   **Framework:** React 19 (Vite)
-*   **Styling:** TailwindCSS
-*   **Routing:** React Router 7
-*   **State Management:** Context API
-*   **HTTP Client:** Axios
-
-### Backend (API & Logic)
-*   **Runtime:** Node.js
-*   **Framework:** Express.js
-*   **Database:** PostgreSQL (via `pg` driver)
-*   **Authentication:** JSON Web Tokens (JWT) & bcrypt
-*   **Security:** Helmet, CORS, Input Validation
-
----
-
-## 📂 Directory Structure
-
-```text
+```
 /
-├── backend/                  # Node.js/Express API
+├── backend/                  # Node.js + Express backend
 │   ├── src/
-│   │   ├── modules/          # Domain Logic (Auth, Patients, CDSS)
-│   │   ├── routes/           # API Endpoints
-│   │   ├── config/           # Database & Auth Config
-│   │   └── app.js            # App Entry Point
+│   │   ├── app.js            # Express app setup, middleware, routes
+│   │   ├── server.js         # HTTP server entry point + Socket.IO init
+│   │   ├── config/
+│   │   │   └── db.js         # PostgreSQL (Neon) connection pool
+│   │   ├── middleware/
+│   │   │   ├── auth.middleware.js   # JWT authentication
+│   │   │   └── role.middleware.js   # Role-based access control
+│   │   ├── modules/
+│   │   │   ├── auth/           # Login, register, MFA OTP, password reset
+│   │   │   ├── patients/       # Patient profile management
+│   │   │   ├── doctors/        # Doctor profile & availability
+│   │   │   ├── appointments/   # Booking & scheduling
+│   │   │   ├── telemedicine/   # Real-time chat + video consultations
+│   │   │   ├── vitals/         # Patient vitals dashboard
+│   │   │   ├── vitals-intake/  # Vitals data intake (nurse role)
+│   │   │   ├── labs/           # Lab reports (encrypted)
+│   │   │   ├── prescriptions/  # Prescriptions management
+│   │   │   ├── ocr/            # OCR prescription scanning
+│   │   │   ├── payments/       # Stripe payment processing
+│   │   │   ├── cdss/           # Clinical Decision Support System
+│   │   │   └── aiBot/          # AI chatbot (Google Gemini)
+│   │   ├── scripts/            # One-time DB migration scripts
+│   │   └── utils/              # OTP, email, audit logger, crypto helpers
+│   ├── tests/                  # Jest test suite
+│   ├── package.json
+│   └── server.js
+│
+├── frontend-sprint1/           # React + Vite frontend
+│   ├── src/
+│   │   ├── pages/              # Route-level page components
+│   │   ├── components/         # Reusable UI components
+│   │   ├── context/            # AuthContext (global auth state)
+│   │   ├── api/                # Axios client configuration
+│   │   └── main.jsx            # App entry point
 │   └── package.json
 │
-├── frontend-sprint1/         # React Web Application
-│   ├── src/
-│   │   ├── components/       # Reusable UI Components
-│   │   ├── pages/            # Page Views
-│   │   └── context/          # Auth & User Context
-│   └── vite.config.js
-│
-└── package.json              # Root scripts for concurrent runs
+├── ocr.controller.js           # Root-level OCR controller
+├── ocr.routes.js
+└── ocr.service.js
 ```
 
 ---
 
-## 🏁 Getting Started
+## ✨ Features
 
-### Prerequisites
-*   **Node.js** (v18 or higher)
-*   **PostgreSQL** (v15 or higher) installed locally or a cloud instance (e.g., Neon, Supabase).
-*   **Git**
-
-### Installation
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/your-username/secure-healthcare.git
-    cd secure-healthcare
-    ```
-
-2.  **Install Dependencies**
-    ```bash
-    # Install root dependencies
-    npm install
-
-    # Install Backend dependencies
-    cd backend
-    npm install
-
-    # Install Frontend dependencies
-    cd ../frontend-sprint1
-    npm install
-    ```
+| Module | Description |
+|---|---|
+| **Authentication** | JWT login, MFA (email OTP), registration, password reset, account activation |
+| **Role-Based Access** | PATIENT, DOCTOR, NURSE, LAB_TECH, ADMIN roles with middleware enforcement |
+| **Appointments** | Book, reschedule, manage appointments with doctor availability slots |
+| **Telemedicine** | Real-time text chat (Socket.IO) + Jitsi video calls during appointment windows |
+| **Vitals** | Nurses record vitals; patients and doctors view charts via Recharts |
+| **Lab Reports** | Encrypted lab results with RSA key-pair security |
+| **Prescriptions + OCR** | Manage and scan prescriptions using Tesseract.js OCR |
+| **Payments** | Stripe-powered payment processing for appointments |
+| **CDSS** | Clinical Decision Support System with AI-powered suggestions |
+| **AI Chatbot** | Google Gemini-powered healthcare assistant |
+| **Audit Logging** | Immutable audit trails for compliance-sensitive actions |
 
 ---
 
-## 🔐 Environment Configuration
+## 🛠️ Tech Stack
 
-Create a `.env` file in the `backend/` directory with the following variables:
+### Backend
+- **Runtime**: Node.js
+- **Framework**: Express.js v5
+- **Database**: PostgreSQL (hosted on Neon)
+- **Real-Time**: Socket.IO v4
+- **Auth**: JWT (`jsonwebtoken`) + bcrypt
+- **Email/OTP**: Nodemailer
+- **OCR**: Tesseract.js + Sharp (image preprocessing)
+- **Payments**: Stripe
+- **AI**: Google Gemini (`@google/genai`)
+- **Testing**: Jest + Supertest
 
-```env
-# Server Configuration
-PORT=5000
-
-# Database Connection
-DATABASE_URL=postgresql://user:password@host/dbname?sslmode=require
-
-# Authentication
-JWT_SECRET=your_super_secret_key_change_this
-JWT_EXPIRES_IN=1d
-
-# Security Keys (Base64 Encoded)
-PII_ENCRYPTION_KEY=your_base64_encryption_key
-LAB_SYM_KEY=your_base64_lab_key
-
-# Email Service (SMTP)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASS=your_app_password
-OTP_EXPIRY_MINUTES=2
-```
+### Frontend
+- **Framework**: React 19 + Vite
+- **Routing**: React Router DOM v7
+- **HTTP**: Axios
+- **Real-Time**: Socket.IO Client
+- **Charts**: Recharts
+- **Forms**: React Hook Form
+- **Animations**: Framer Motion
+- **Icons**: Lucide React + React Icons
+- **Styling**: Tailwind CSS
 
 ---
 
-## 🏃‍♂️ Running the Application
+## ⚙️ Prerequisites
 
-To run the full stack (Frontend + Backend) concurrently:
+- Node.js v18+
+- npm v9+
+- PostgreSQL database (or a [Neon](https://neon.tech) serverless Postgres account)
+- Stripe account (for payment processing)
+- Gmail / SMTP credentials (for OTP emails)
+- Google Gemini API key (for AI chatbot)
 
-1.  Navigate to the root directory.
-2.  Run the start script:
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
 
 ```bash
+git clone https://github.com/Aswinlaks/secure_healthcare.git
+cd secure_healthcare
+```
+
+### 2. Backend Setup
+
+```bash
+cd backend
+npm install
+```
+
+Create a `.env` file in the `backend/` directory:
+
+```env
+# Server
+PORT=5000
+
+# Database (PostgreSQL / Neon)
+DATABASE_URL=postgresql://<user>:<password>@<host>/<db>?sslmode=require
+DB_HOST=
+DB_PORT=5432
+DB_NAME=
+DB_USER=
+DB_PASSWORD=
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRES_IN=1d
+
+# OTP / Email
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_gmail_app_password
+OTP_EXPIRY_MINUTES=10
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Google Gemini AI
+GEMINI_API_KEY=your_gemini_api_key
+
+# RSA Keys (for encrypted lab results)
+LAB_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+```
+
+Run database migrations:
+
+```bash
+node src/scripts/migrate_telemedicine.js
+node src/scripts/migrate_enable_mfa.js
+node src/scripts/add_admin_user.js
+```
+
+Start the backend:
+
+```bash
+# Development (with auto-reload)
+npm run dev
+
+# Production
 npm start
 ```
 
-*   **Frontend:** `http://localhost:5173`
-*   **Backend:** `http://localhost:5000`
+The backend will run on **http://localhost:5000**
 
 ---
 
-> This project is for educational purposes.
+### 3. Frontend Setup
+
+```bash
+cd frontend-sprint1
+npm install
+```
+
+Create a `.env` file in `frontend-sprint1/`:
+
+```env
+VITE_API_URL=http://localhost:5000
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+The frontend will run on **http://localhost:5173**
+
+---
+
+## 🔐 User Roles & Access
+
+| Role | Capabilities |
+|---|---|
+| **PATIENT** | View own records, book appointments, telemedicine chat, view vitals/prescriptions, make payments |
+| **DOCTOR** | Manage appointments, start telemedicine sessions, video calls, CDSS, view patient records |
+| **NURSE** | Record patient vitals |
+| **LAB_TECH** | Upload and manage encrypted lab reports |
+| **ADMIN** | Create users, manage all records |
+
+### Default Admin
+Admin users are seeded using `src/scripts/add_admin_user.js`. Doctors, Nurses, and Lab Technicians must be created by an Admin.
+
+---
+
+## 🩺 Telemedicine Flow
+
+1. Doctor or patient navigates to `/telemedicine/:appointmentId`
+2. System validates appointment timing (cannot enter before `scheduled_start`)
+3. A shared telemedicine session is created (or reused if one exists for this doctor-patient pair)
+4. Real-time chat via Socket.IO begins
+5. Video call via **Jitsi Meet** is available during the active appointment window
+6. Chat is permanently unlocked after the first appointment concludes
+7. Doctor ends the session via "End Consultation"
+
+---
+
+## 🧪 Testing
+
+### Backend Tests (Jest)
+```bash
+cd backend
+npm test               # Run all tests
+npm run test:coverage  # Run with coverage report
+```
+
+### Frontend Tests (Vitest)
+```bash
+cd frontend-sprint1
+npm run test:run       # Run all tests once
+npm test               # Run in watch mode
+```
+
+---
+
+## 📡 Key API Endpoints
+
+### Auth
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Patient self-registration |
+| POST | `/api/auth/login` | Step 1: Password check |
+| POST | `/api/auth/login/verify-otp` | Step 2: MFA OTP verification |
+| POST | `/api/auth/activate` | Activate account with OTP |
+| POST | `/api/auth/forgot-password` | Request password reset OTP |
+| POST | `/api/auth/reset-password` | Reset password with OTP |
+
+### Telemedicine
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/telemedicine/session` | Create session (Doctor only) |
+| GET | `/api/telemedicine/session/:id` | Get session details |
+| GET | `/api/telemedicine/messages/:id` | Get message history |
+| GET | `/api/telemedicine/appointment/:id` | Get session by appointment |
+
+### Socket.IO Events
+| Event | Direction | Description |
+|---|---|---|
+| `join-session` | Client → Server | Join a session room |
+| `send-message` | Client → Server | Send a chat message |
+| `mark-read` | Client → Server | Mark messages as read |
+| `end-session` | Client → Server | End session (Doctor only) |
+| `receive-message` | Server → Client | Broadcast new message |
+| `session-ended` | Server → Client | Notify session ended |
+
+---
+
+## 🔒 Security Features
+
+- **JWT Authentication** on all protected routes
+- **Role-based access control** via middleware
+- **Password hashing** with bcrypt (12 rounds)
+- **MFA via email OTP** (SHA-256 hashed, time-limited)
+- **RSA encryption** for sensitive lab results
+- **Audit logging** for all critical actions
+- **Password history** to prevent reuse
+- **Account locking** for security violations
+
+---
+
+## 📦 Scripts Reference
+
+| Script | Location | Purpose |
+|---|---|---|
+| `migrate_telemedicine.js` | `src/scripts/` | Create telemedicine DB tables |
+| `migrate_enable_mfa.js` | `src/scripts/` | Enable MFA for all users |
+| `add_admin_user.js` | `src/scripts/` | Seed initial admin user |
+| `add_doctor_availability_constraint.js` | `src/scripts/` | Add DB constraints for scheduling |
+| `encrypt_existing_patients.js` | `src/scripts/` | Encrypt existing patient data |
+| `migrate_lab_result_type.js` | `src/scripts/` | Migrate lab result column types |
+
+---
+
+## 👥 Team
+
+This project was built as part of the 6th Semester Software Engineering course at Amrita Vishwa Vidyapeetham.
+
+---
+
+## 📄 License
+
+This project is for academic purposes.
