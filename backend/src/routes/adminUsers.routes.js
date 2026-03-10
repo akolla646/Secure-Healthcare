@@ -27,6 +27,9 @@ const pool = require("../config/db");
 // Encryption for PII (patient names)
 const { encrypt } = require("../utils/encryption");
 
+// Audit logging
+const { logAudit } = require("../utils/auditLogger");
+
 // Authentication and authorization middleware
 const { authenticate } = require("../middleware/auth.middleware");
 const { authorize } = require("../middleware/role.middleware");
@@ -244,18 +247,14 @@ router.post(
       }
 
       // 7️⃣ Create audit log entry
-      await client.query(
-        `
-        INSERT INTO audit_logs (
-          actor_user_id,
-          action,
-          entity_type,
-          entity_id
-        )
-        VALUES ($1, 'USER_CREATED', 'USER', $2)
-        `,
-        [req.user.user_id || req.user.id, userId]
-      );
+      await logAudit({
+        actor_user_id: req.user.user_id || req.user.id,
+        action: "USER_CREATED",
+        entity_type: "USER",
+        entity_id: userId,
+        ip_address: req.ip,
+        db: client
+      });
 
       await client.query("COMMIT");
 
@@ -378,18 +377,14 @@ router.delete(
       await client.query("DELETE FROM users WHERE user_id = $1", [id]);
 
       // Create audit log entry
-      await client.query(
-        `
-        INSERT INTO audit_logs (
-          actor_user_id,
-          action,
-          entity_type,
-          entity_id
-        )
-        VALUES ($1, 'USER_DELETED', 'USER', $2)
-        `,
-        [req.user.user_id, id]
-      );
+      await logAudit({
+        actor_user_id: req.user.user_id,
+        action: "USER_DELETED",
+        entity_type: "USER",
+        entity_id: id,
+        ip_address: req.ip,
+        db: client
+      });
 
       await client.query("COMMIT");
       res.status(200).json({ message: "User deleted successfully" });

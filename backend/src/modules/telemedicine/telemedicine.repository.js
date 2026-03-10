@@ -151,6 +151,23 @@ exports.markMessagesAsRead = async (sessionId, receiverId) => {
 };
 
 // ------------------------------------------------------------
+// activateSession
+// Updates a session status from 'WAITING' to 'ACTIVE'.
+// Called when a doctor joins a session for the first time.
+// Returns the updated row.
+// ------------------------------------------------------------
+exports.activateSession = async (sessionId) => {
+  const query = `
+    UPDATE telemedicine_sessions
+    SET status = 'ACTIVE'
+    WHERE session_id = $1 AND status = 'WAITING'
+    RETURNING *
+  `;
+  const { rows } = await pool.query(query, [sessionId]);
+  return rows[0];
+};
+
+// ------------------------------------------------------------
 // endSession
 // Marks a session as ENDED and records the ended_at timestamp.
 // The WHERE clause checks status != 'ENDED' to prevent double-

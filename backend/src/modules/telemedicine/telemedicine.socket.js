@@ -15,6 +15,7 @@ const { Server } = require("socket.io");
 const jwt = require("jsonwebtoken");
 const pool = require("../../config/db");
 const telemedicineRepo = require("./telemedicine.repository");
+const { logAudit } = require("../../utils/auditLogger");
 
 // Module-level io instance — shared across all events
 let io;
@@ -95,11 +96,22 @@ exports.initSocket = (server) => {
                 // All future broadcasts for this session use io.to(sessionId)
                 socket.join(sessionId);
 
+                // If a doctor joins and the session is currently WAITING, set it to ACTIVE
+                if (socket.user.role === "DOCTOR" && session.status === "WAITING") {
+                    const updatedSession = await telemedicineRepo.activateSession(sessionId);
+                    if (updatedSession) {
+                        io.to(sessionId).emit("session-status-changed", { sessionId, status: "ACTIVE" });
+                    }
+                }
+
                 // Write an audit log entry for compliance/traceability
-                await pool.query(
-                    "INSERT INTO audit_logs (actor_user_id, action, entity_type, entity_id, ip_address) VALUES ($1, $2, 'TELEMEDICINE_SESSION', $3, $4)",
-                    [socket.user.user_id, "JOIN_SESSION", sessionId, socket.request.connection.remoteAddress || ""]
-                );
+                await logAudit({
+                    actor_user_id: socket.user.user_id,
+                    action: "JOIN_SESSION",
+                    entity_type: "TELEMEDICINE_SESSION",
+                    entity_id: sessionId,
+                    ip_address: socket.request.connection.remoteAddress || ""
+                });
 
                 console.log(`👤 User ${socket.user.user_id} joined session ${sessionId}`);
             } catch (err) {
@@ -200,10 +212,13 @@ exports.initSocket = (server) => {
             // Record the disconnect in audit logs; use .catch() so a DB error here
             // doesn't surface as an unhandled rejection
             if (socket.user && socket.user.user_id) {
-                await pool.query(
-                    "INSERT INTO audit_logs (actor_user_id, action, entity_type, ip_address) VALUES ($1, $2, 'TELEMEDICINE_SOCKET', $3)",
-                    [socket.user.user_id, "LEAVE_SOCKET", socket.request.connection.remoteAddress || ""]
-                ).catch(e => console.error("Audit log error on disconnect:", e));
+                logAudit({
+                    actor_user_id: socket.user.user_id,
+                    action: "LEAVE_SOCKET",
+                    entity_type: "USER",
+                    entity_id: socket.user.user_id,
+                    ip_address: socket.request.connection.remoteAddress || ""
+                }).catch(e => console.error("Audit log error on disconnect:", e));
             }
         });
     });

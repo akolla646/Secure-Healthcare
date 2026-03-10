@@ -59,18 +59,18 @@ const TelemedicinePage = () => {
                 }
 
                 if (session) {
-                    // A session already exists for this doctor-patient pair → reuse it
                     setSessionId(session.session_id);
-                } else {
-                    // First visit: create a new session for this appointment
-                    // (In routes.js, POST /session is DOCTOR-only, but here both
-                    //  doctor and patient attempt to create — the server handles it)
+                } else if (user?.role?.toUpperCase() === 'DOCTOR') {
+                    // Doctor is joining for the first time: Create the session
                     try {
                         const createRes = await client.post('/telemedicine/session', { appointmentId });
                         setSessionId(createRes.data.data.session_id);
                     } catch (createErr) {
                         setError('Failed to start telemedicine session.');
                     }
+                } else if (user?.role?.toUpperCase() === 'PATIENT') {
+                    // Patient is joining but doctor hasn't started the session yet
+                    setError('Waiting for the doctor to start the telemedicine session. Please stay on this page or try again in a few minutes.');
                 }
             } catch (err) {
                 // Map HTTP status codes to user-friendly error messages

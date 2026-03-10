@@ -274,15 +274,25 @@ const PatientDashboard = () => {
                                             <span className="text-xs font-semibold text-teal-700 flex items-center">
                                                 <CheckCircle className="h-3 w-3 mr-1" /> Paid
                                             </span>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setViewingSlip(appointment);
-                                                }}
-                                                className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 shadow-sm text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                            >
-                                                View Slip
-                                            </button>
+                                            <div className="flex space-x-2">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setViewingSlip(appointment);
+                                                    }}
+                                                    className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 shadow-sm text-xs font-medium rounded text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                >
+                                                    View Slip
+                                                </button>
+                                                <Link
+                                                    to={`/telemedicine/${appointment.appointment_id}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                >
+                                                    <MessageSquare className="h-3 w-3 mr-1.5" />
+                                                    Join call
+                                                </Link>
+                                            </div>
                                         </div>
                                     )}
                                 </li>

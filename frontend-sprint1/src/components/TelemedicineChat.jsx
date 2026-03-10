@@ -133,7 +133,12 @@ const TelemedicineChat = ({ sessionId, appointment }) => {
                     setSession((prev) => ({ ...prev, status: "ENDED" }));
                 });
 
-                // Step 4d: Handle server-emitted errors (auth failures, etc.)
+                // Step 4d: Handle session status changing to ACTIVE
+                activeSocket.on("session-status-changed", ({ status }) => {
+                    setSession((prev) => ({ ...prev, status }));
+                });
+
+                // Step 4e: Handle server-emitted errors (auth failures, etc.)
                 activeSocket.on("error", (err) => {
                     if (isMounted) setError(err.message);
                 });
@@ -217,14 +222,14 @@ const TelemedicineChat = ({ sessionId, appointment }) => {
 
     return (
         // Outer container: side-by-side layout when video is active
-        <div className={`flex flex-col md:flex-row h-[600px] w-full ${isVideoActive ? 'max-w-6xl' : 'max-w-2xl'} transition-all duration-300 ease-in-out gap-4`}>
+        <div className={`flex flex-col md:flex-row h-full min-h-[600px] w-full ${isVideoActive ? 'max-w-6xl' : 'max-w-2xl'} transition-all duration-300 ease-in-out gap-4`}>
 
             {/* ---- Jitsi Video Call Panel ---- */}
             {/* Rendered only when the user clicks "Start Video" */}
             {isVideoActive && (
-                <div className="flex-1 bg-black rounded-xl shadow-sm border border-gray-200 overflow-hidden relative min-w-[300px]">
+                <div className="flex-[2] bg-black rounded-xl shadow-sm border border-gray-200 overflow-hidden relative min-w-[300px] min-h-[400px]">
                     <iframe
-                        src={`${jitsiRoomUrl}#config.prejoinPageEnabled=false&userInfo.displayName="${user.name}"`}
+                        src={`${jitsiRoomUrl}#config.prejoinPageEnabled=false&userInfo.displayName="${encodeURIComponent(user.name)}"`}
                         allow="camera; microphone; fullscreen; display-capture; autoplay"
                         className="w-full h-full border-0"
                         title="Telemedicine Video Call"
@@ -234,7 +239,7 @@ const TelemedicineChat = ({ sessionId, appointment }) => {
 
             {/* ---- Chat Panel ---- */}
             {/* Always visible; shrinks to fixed width when video is active */}
-            <div className={`flex flex-col h-full bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden ${isVideoActive ? 'w-full md:w-96 flex-shrink-0' : 'flex-1'}`}>
+            <div className={`flex flex-col bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden ${isVideoActive ? 'w-full md:w-96 flex-shrink-0' : 'flex-1'}`}>
 
                 {/* Header: session status + action buttons */}
                 <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">

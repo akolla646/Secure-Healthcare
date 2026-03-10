@@ -9,6 +9,7 @@
 
 // Database connection pool
 const pool = require("../../config/db");
+const { logAudit } = require("../../utils/auditLogger");
 
 // =============================================================================
 // AUTHORIZATION QUERIES
@@ -164,14 +165,11 @@ exports.getByPatient = async (patientId) => {
  * @param {string} prescriptionId - Created prescription_id for reference
  */
 exports.insertAudit = async (client, actorId, prescriptionId) => {
-  const q = `
-    INSERT INTO audit_logs (
-      actor_user_id,
-      action,
-      entity_type,
-      entity_id
-    )
-    VALUES ($1, 'CREATE_PRESCRIPTION', 'PRESCRIPTION', $2)
-  `;
-  await client.query(q, [actorId, prescriptionId]);
+  await logAudit({
+    actor_user_id: actorId,
+    action: "CREATE_PRESCRIPTION",
+    entity_type: "PRESCRIPTION",
+    entity_id: prescriptionId,
+    db: client
+  });
 };

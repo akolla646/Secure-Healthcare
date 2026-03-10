@@ -26,32 +26,18 @@ const pool = require("../config/db");
  * @param {string} params.action - The action type (e.g., 'LOGIN_PASSWORD_SUCCESS', 'PERMISSION_DENIED', 'VERIFY_LAB_REPORT')
  * @param {string} params.entity_type - Type of entity being acted upon (e.g., 'USER', 'PATIENT', 'LAB_REPORT', 'SYSTEM')
  * @param {string|null} params.entity_id - UUID of the specific entity (null allowed only for SYSTEM entity_type)
+ * @param {string|null} params.ip_address - IP address of the actor (optional)
+ * @param {Object} [params.db] - Optional database client for transaction support
  * 
  * @throws {Error} If entity_id is null for non-SYSTEM entity types
- * 
- * @example
- * // Log a successful login
- * await logAudit({
- *   actor_user_id: user.user_id,
- *   action: "LOGIN_PASSWORD_SUCCESS",
- *   entity_type: "USER",
- *   entity_id: user.user_id
- * });
- * 
- * @example
- * // Log a system event (no specific entity)
- * await logAudit({
- *   actor_user_id: null,
- *   action: "FAILED_LOGIN",
- *   entity_type: "SYSTEM",
- *   entity_id: null
- * });
  */
 async function logAudit({
   actor_user_id,
   action,
   entity_type,
-  entity_id
+  entity_id,
+  ip_address = null,
+  db = pool
 }) {
   // ✅ Validation: Allow NULL entity_id only for SYSTEM events
   // This ensures all non-system events have a traceable entity reference
@@ -60,17 +46,18 @@ async function logAudit({
   }
 
   // Insert the audit log entry into the database
-  await pool.query(
+  await db.query(
     `
     INSERT INTO audit_logs (
       actor_user_id,
       action,
       entity_type,
-      entity_id
+      entity_id,
+      ip_address
     )
-    VALUES ($1, $2, $3, $4)
+    VALUES ($1, $2, $3, $4, $5)
     `,
-    [actor_user_id, action, entity_type, entity_id]
+    [actor_user_id, action, entity_type, entity_id, ip_address]
   );
 }
 
