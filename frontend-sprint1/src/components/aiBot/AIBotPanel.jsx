@@ -142,8 +142,8 @@ function AIBotPanel({ apiBase }) {
                             onClick={handleGenerateInsights}
                             disabled={uploadStatus !== 'uploaded' || generating}
                             className={`w-full py-3.5 rounded-lg font-bold text-lg shadow-sm flex items-center justify-center gap-3 transition-all ${(uploadStatus !== 'uploaded' || generating)
-                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                                    : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/25 border border-teal-700'
+                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                                : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/25 border border-teal-700'
                                 }`}
                         >
                             {generating ? (
