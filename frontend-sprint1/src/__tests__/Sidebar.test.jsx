@@ -53,8 +53,8 @@ describe('Sidebar Component', () => {
 
     it('shows Doctor specific links', () => {
         renderSidebar('Doctor');
-        expect(screen.getByText('Patient Dashboard')).toBeInTheDocument();
-        expect(screen.getByText('My Patients')).toBeInTheDocument();
+        expect(screen.getByText('Doctor Dashboard')).toBeInTheDocument();
+        expect(screen.getByText('Vitals Dashboard')).toBeInTheDocument();
     });
 
     it('shows Patient specific links', () => {

@@ -5,6 +5,7 @@
  */
 
 const pool = require("../../config/db");
+const { logAudit } = require("../../utils/auditLogger");
 
 // ============================
 // DOCTOR QUERIES
@@ -215,15 +216,12 @@ exports.getDoctorIdByUserId = async (userId) => {
 
 // Insert audit log entry (transactional)
 exports.insertAuditLog = async (client, actorUserId, appointmentId, ip) => {
-  const query = `
-    INSERT INTO audit_logs (
-      actor_user_id,
-      action,
-      entity_type,
-      entity_id,
-      ip_address
-    )
-    VALUES ($1, 'BOOK_APPOINTMENT', 'APPOINTMENT', $2, $3)
-  `;
-  await client.query(query, [actorUserId, appointmentId, ip]);
+  await logAudit({
+    actor_user_id: actorUserId,
+    action: "BOOK_APPOINTMENT",
+    entity_type: "APPOINTMENT",
+    entity_id: appointmentId,
+    ip_address: ip,
+    db: client
+  });
 };

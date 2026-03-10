@@ -24,7 +24,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     // Navigation Items Definition
     const navItems = {
         Doctor: [
-            { name: 'Patient Dashboard', path: '/dashboard', icon: LayoutDashboard },
+            { name: 'Doctor Dashboard', path: '/dashboard', icon: LayoutDashboard },
             { name: 'Vitals Dashboard', path: '/vitals-dashboard', icon: Activity },
         ],
         Patient: [
