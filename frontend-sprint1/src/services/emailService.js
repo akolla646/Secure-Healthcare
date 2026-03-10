@@ -9,9 +9,9 @@ import emailjs from '@emailjs/browser';
 
 // EMAILJS CONFIGURATION
 // Keys should ideally be in environment variables (e.g., VITE_EMAILJS_PUBLIC_KEY)
-const EMAILJS_SERVICE_ID = "service_q0ew1ht";
-const EMAILJS_TEMPLATE_ID = "template_agobg2n";
-const EMAILJS_PUBLIC_KEY = "AjjELeucm-wEo7cwh";
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 /**
  * Initializes the EmailJS SDK.
