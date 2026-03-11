@@ -14,7 +14,7 @@
 // Import service layer and utilities
 const patientService = require("./patient.service");
 const { decrypt } = require("../../utils/crypto.util");
-const logAudit = require("../../utils/auditLogger");
+const { logAudit } = require("../../utils/auditLogger");
 
 // =============================================================================
 // PATIENT CREATION
@@ -46,11 +46,11 @@ async function createPatient(req, res) {
 
     // 🔐 AUDIT LOG - record who created this patient
     await logAudit({
-      actorUserId: req.user.user_id,
+      actor_user_id: req.user.user_id,
       action: "CREATE_PATIENT",
-      entityType: "PATIENT",
-      entityId: patient.patient_id,
-      ipAddress: req.ip
+      entity_type: "PATIENT",
+      entity_id: patient.patient_id,
+      ip_address: req.ip
     });
 
     // 🔐 Decrypt name before sending response
@@ -91,11 +91,11 @@ async function getAll(req, res) {
 
     // 🔐 AUDIT LOG - record bulk read access
     await logAudit({
-      actorUserId: req.user.user_id,
+      actor_user_id: req.user.user_id,
       action: "VIEW_PATIENT",
-      entityType: "PATIENT",
-      entityId: null, // Multiple patients (bulk read)
-      ipAddress: req.ip
+      entity_type: "SYSTEM", // Changed from PATIENT since entity_id is null
+      entity_id: null,
+      ip_address: req.ip
     });
 
     // 🔐 Decrypt PII ONLY for authorized medical staff
@@ -144,11 +144,11 @@ async function registerPatientWithUser(req, res) {
 
     // 🔐 AUDIT LOG - record patient account creation
     await logAudit({
-      actorUserId: req.user.user_id,
+      actor_user_id: req.user.user_id,
       action: "UPDATE_PATIENT",
-      entityType: "PATIENT",
-      entityId: patient.patient_id,
-      ipAddress: req.ip
+      entity_type: "PATIENT",
+      entity_id: patient.patient_id,
+      ip_address: req.ip
     });
 
     // 🔐 Decrypt before response
@@ -162,8 +162,46 @@ async function registerPatientWithUser(req, res) {
   }
 }
 
+/**
+ * Request Data Erasure (GDPR)
+ * 
+ * Handles DELETE /patients/me/erasure
+ * Allows a patient to request the deletion/anonymization of their PII.
+ * 
+ * Input:
+ * - req.user.user_id: string (Extracted from JWT)
+ * 
+ * Output:
+ * - JSON object: Success message
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+async function requestDataErasure(req, res) {
+  try {
+    const userId = req.user.user_id;
+
+    // Execute erasure via service layer
+    await patientService.requestDataErasure(userId);
+
+    // 🔐 AUDIT LOG - record GDPR erasure request
+    await logAudit({
+      actor_user_id: userId,
+      action: "GDPR_ERASURE",
+      entity_type: "USER",
+      entity_id: userId,
+      ip_address: req.ip
+    });
+
+    res.status(200).json({ message: "Personal data successfully erased in compliance with GDPR." });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   createPatient,
   getAll,
-  registerPatientWithUser
+  registerPatientWithUser,
+  requestDataErasure
 };

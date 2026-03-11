@@ -3,12 +3,16 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { LogOut, User, ShieldCheck, MessageSquare, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
+import useAutoLogout from '../hooks/useAutoLogout';
 
 const Layout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Initialize auto-logout (15 minutes by default)
+    useAutoLogout();
 
     const handleLogout = () => {
         logout();

@@ -36,8 +36,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         Admin: [
             { name: 'Admin Overview', path: '/dashboard', icon: ShieldAlert },
             { name: 'User Management', path: '/admin/users', icon: Users },
-            { name: 'Audit Logs', path: '/admin/audit', icon: FileText },
-            { name: 'Compliance', path: '/admin/compliance', icon: ShieldAlert },
+            { name: 'Audit Logs', path: '/admin/logs', icon: FileText },
         ],
         Nurse: [
             { name: 'Ward Dashboard', path: '/dashboard', icon: LayoutDashboard },

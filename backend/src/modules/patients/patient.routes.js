@@ -42,4 +42,16 @@ router.get(
   controller.getAll
 );
 
+// ============================
+// DATA PRIVACY (GDPR)
+// ============================
+
+// Request Data Erasure
+router.delete(
+  "/me/erasure",
+  authenticate,
+  authorize("PATIENT"), // Only patients can request their own data erasure in this context
+  controller.requestDataErasure
+);
+
 module.exports = router;

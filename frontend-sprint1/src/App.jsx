@@ -19,6 +19,7 @@ import PatientCareView from './pages/PatientCareView';
 import OrderLab from './pages/OrderLab';
 import DoctorAvailability from './pages/DoctorAvailability';
 import AuditLogs from './pages/AuditLogs';
+import UserManagement from './pages/UserManagement';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import TelemedicinePage from './pages/TelemedicinePage';
@@ -122,6 +123,14 @@ function App() {
             />
 
             {/* Admin-Specific Route: Audit Logs */}
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute allowedRoles={['Admin', 'ADMIN']}>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/admin/logs"
               element={

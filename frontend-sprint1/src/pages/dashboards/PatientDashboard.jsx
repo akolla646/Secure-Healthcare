@@ -10,15 +10,16 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock, MessageSquare, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Calendar, FileText, ArrowRight, Beaker, CheckCircle, Lock, Download, Loader2, Clock, MessageSquare, Sparkles, Trash2, AlertTriangle } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api, { createCheckoutSession } from '../../api/client';
 import Modal from '../../components/Modal';
 import VitalsSummary from '../../components/VitalsSummary';
 
 const PatientDashboard = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
     // Data States
     const [appointments, setAppointments] = useState([]);
@@ -35,6 +36,12 @@ const PatientDashboard = () => {
     // Modal State for Appointments
     const [viewingAppointment, setViewingAppointment] = useState(null);
     const [viewingSlip, setViewingSlip] = useState(null);
+
+    // Modal State for GDPR Data Erasure
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deletingAccount, setDeletingAccount] = useState(false);
+
+    // Fetch initial dashboard data
 
     // Fetch initial dashboard data
     useEffect(() => {
@@ -177,6 +184,24 @@ const PatientDashboard = () => {
             alert("Failed to download report. Please try again.");
         } finally {
             setDownloadingId(null);
+        }
+    };
+
+    /**
+     * Handles GDPR Right to Erasure request
+     */
+    const handleDeleteAccount = async () => {
+        setDeletingAccount(true);
+        try {
+            await api.delete('/patients/me/erasure');
+            setIsDeleteModalOpen(false);
+            alert("Your account has been successfully deleted in compliance with GDPR. You will now be logged out.");
+            logout();
+            navigate('/login');
+        } catch (err) {
+            console.error("Failed to delete account", err);
+            alert(err.response?.data?.error || "Failed to process the erasure request. Please try again later.");
+            setDeletingAccount(false);
         }
     };
 
@@ -398,6 +423,19 @@ const PatientDashboard = () => {
                                     <ArrowRight className="h-4 w-4 text-slate-400" />
                                 </Link>
                             </li>
+                            {/* GDPR Data Erasure */}
+                            <li className="px-4 py-4 hover:bg-red-50 transition duration-150 ease-in-out">
+                                <button
+                                    onClick={() => setIsDeleteModalOpen(true)}
+                                    className="flex items-center justify-between w-full text-left text-sm text-red-600"
+                                >
+                                    <div className="flex items-center font-medium">
+                                        <Trash2 className="h-5 w-5 mr-3 text-red-500" />
+                                        Request Data Erasure (Delete Account)
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-red-400" />
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>
@@ -611,6 +649,58 @@ const PatientDashboard = () => {
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            {/* Delete Account Confirmation Modal (GDPR) */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => !deletingAccount && setIsDeleteModalOpen(false)}
+                title="Request Data Erasure"
+            >
+                <div className="space-y-4">
+                    <div className="bg-red-50 p-4 rounded-md border border-red-200 text-red-800 flex items-start">
+                        <AlertTriangle className="h-6 w-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <h4 className="font-bold text-red-900 mb-1">Warning: Irreversible Action</h4>
+                            <p className="text-sm">
+                                You are about to invoke your Right to Erasure under GDPR. This will:
+                            </p>
+                            <ul className="list-disc list-inside text-sm mt-2 space-y-1 ml-1 text-red-700">
+                                <li>Permanently delete your login account.</li>
+                                <li>Anonymize all Personally Identifiable Information (PII) including your name and demographic data.</li>
+                                <li>Medical records (like lab results and appointments) will be anonymized but retained for legal/medical compliance.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                        Once completed, you will immediately lose access to your account and historical data cannot be restored. Are you absolutely sure you want to proceed?
+                    </p>
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 mt-6">
+                        <button
+                            type="button"
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            disabled={deletingAccount}
+                            className="px-4 py-2 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleDeleteAccount}
+                            disabled={deletingAccount}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 transition-colors"
+                        >
+                            {deletingAccount ? (
+                                <>
+                                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                                    Erasing Data...
+                                </>
+                            ) : (
+                                "Yes, Delete My Data"
+                            )}
+                        </button>
+                    </div>
+                </div>
             </Modal>
 
         </div >

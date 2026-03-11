@@ -1,36 +1,17 @@
-/**
- * Admin Dashboard Component
- * 
- * The central hub for System Administrators to manage users and monitor system health.
- * Features:
- * - Statistical Overview (Total Users, Audit Logs, Status)
- * - User Management (Create, Delete, List, Search)
- * - Recent Audit Log Viewing
- */
-
 import { useState, useEffect } from "react";
-import { Users, FileText, AlertTriangle, CheckCircle, Search, Trash2, Plus } from 'lucide-react';
-import axios from 'axios';
-import api from '../../api/client'; // Added to use preconfigured client
-import { useNavigate, Link } from "react-router-dom";
+import { Users, Search, Trash2, Plus } from 'lucide-react';
+import api from '../api/client';
+import { useNavigate } from "react-router-dom";
 
-const AdminDashboard = () => {
+const UserManagement = () => {
     const navigate = useNavigate();
 
-    // Dashboard Statistics State
-    const [stats, setStats] = useState({
-        totalUsers: 0,
-        auditLogs: 0,
-        systemStatus: "Compliant"
-    });
-
-    // Data Lists
-    const [logs, setLogs] = useState([]);   // Recent audit logs
-    const [users, setUsers] = useState([]); // List of all users
+    // Data List
+    const [users, setUsers] = useState([]);
 
     // UI State
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState(""); // For filtering user list
+    const [searchTerm, setSearchTerm] = useState("");
 
     // Modal State (Add User Form)
     const [showModal, setShowModal] = useState(false);
@@ -38,12 +19,11 @@ const AdminDashboard = () => {
         username: "",
         email: "",
         password: "",
-        role: "PATIENT", // Default role
-        full_name: "",   // Specific to Patient/Doctor
+        role: "PATIENT",
+        full_name: "",
         dob: "",
         gender: "Male",
         blood_group: "O+",
-        // Doctor specific fields
         specialization: "",
         qualification: "",
         experience_years: 0,
@@ -61,41 +41,17 @@ const AdminDashboard = () => {
 
     // Load data on component mount
     useEffect(() => {
-        fetchDashboardData();
+        fetchUsers();
     }, []);
 
-    /**
-     * Fetches all necessary data for the dashboard:
-     * 1. List of users
-     * 2. Recent audit logs
-     * 3. Statistical summaries
-     */
-    const fetchDashboardData = async () => {
+    const fetchUsers = async () => {
         setLoading(true);
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-
-            // 1. Fetch Users
             const usersRes = await api.get("/admin/users", config);
             setUsers(usersRes.data);
-
-            // 2. Fetch Recent Logs (Limit 5)
-            const logsRes = await api.get("/admin/audit-logs?limit=5", config);
-            setLogs(logsRes.data.logs);
-
-            // 3. Fetch Audit Summary for Total Count (More efficient than fetching all logs)
-            const summaryRes = await api.get("/admin/audit-logs/summary", config);
-
-            // Update stats state
-            setStats({
-                totalUsers: usersRes.data.length,
-                auditLogs: summaryRes.data.total_events,
-                systemStatus: "Compliant"
-            });
-
         } catch (err) {
-            console.error("Failed to fetch dashboard data", err);
-            // Redirect to login on auth failure
+            console.error("Failed to fetch users", err);
             if (err.response && err.response.status === 401) {
                 navigate('/');
             }
@@ -104,10 +60,6 @@ const AdminDashboard = () => {
         }
     };
 
-    /**
-     * Deletes a user from the system.
-     * Requires confirmation.
-     */
     const handleDeleteUser = async (userId) => {
         if (!window.confirm("Are you sure you want to delete this user?")) return;
 
@@ -116,8 +68,7 @@ const AdminDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            // Refresh logic
-            fetchDashboardData();
+            fetchUsers();
             setSuccess("User deleted successfully");
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
@@ -127,9 +78,6 @@ const AdminDashboard = () => {
         }
     };
 
-    /**
-     * Handles the form submission for creating a new user.
-     */
     const handleAddUser = async (e) => {
         e.preventDefault();
         setError("");
@@ -139,9 +87,7 @@ const AdminDashboard = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            // Success Logic
             setShowModal(false);
-            // Reset Form (Simplified reset)
             setFormData({
                 username: "", email: "", password: "", role: "PATIENT",
                 full_name: "", dob: "", gender: "Male", blood_group: "O+",
@@ -149,7 +95,7 @@ const AdminDashboard = () => {
             });
 
             setSuccess("User created successfully");
-            fetchDashboardData(); // Refresh list to show new user
+            fetchUsers();
             setTimeout(() => setSuccess(""), 3000);
         } catch (err) {
             console.error("Create failed", err);
@@ -157,93 +103,28 @@ const AdminDashboard = () => {
         }
     };
 
-    // Generic input handler
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Filter users based on search term (username or role)
     const filteredUsers = users.filter(u =>
         u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.role_name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (loading) return <div className="p-10 text-center">Loading Dashboard...</div>;
+    if (loading) return <div className="p-10 text-center">Loading User Management...</div>;
 
     return (
-        <div className="space-y-6">
-            {/* Notification Messages */}
+        <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h2 className="text-2xl font-bold leading-7 text-slate-900 sm:text-3xl sm:truncate mb-6">User Management</h2>
+
             {error && <div className="bg-red-100 text-red-700 p-3 rounded">{error}</div>}
             {success && <div className="bg-green-100 text-green-700 p-3 rounded">{success}</div>}
 
-            {/* Statistics Cards Grid */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Total Users Card */}
-                <div
-                    className="bg-white overflow-hidden shadow rounded-lg cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => setShowModal(true)}
-                >
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <Users className="h-6 w-6 text-slate-400" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-slate-500 truncate">Total Users</dt>
-                                    <dd className="text-lg font-medium text-slate-900">{stats.totalUsers}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Audit Logs Card + Link */}
-                <Link to="/admin/logs" className="block bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <FileText className="h-6 w-6 text-slate-400" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-slate-500 truncate">Total Audit Logs</dt>
-                                    <dd className="text-lg font-medium text-slate-900">{stats.auditLogs}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="bg-slate-50 px-5 py-3">
-                        <div className="text-sm">
-                            <span className="font-medium text-teal-600 hover:text-teal-900">View logs</span>
-                        </div>
-                    </div>
-                </Link>
-
-                {/* System Status Card */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                    <div className="p-5">
-                        <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                                <CheckCircle className="h-6 w-6 text-green-400" />
-                            </div>
-                            <div className="ml-5 w-0 flex-1">
-                                <dl>
-                                    <dt className="text-sm font-medium text-slate-500 truncate">System Status</dt>
-                                    <dd className="text-lg font-medium text-green-600">{stats.systemStatus}</dd>
-                                </dl>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* User Management Section */}
             <div className="bg-white shadow overflow-hidden sm:rounded-md">
                 <div className="bg-white px-4 py-5 sm:px-6 flex justify-between items-center border-b border-slate-200">
                     <h3 className="text-lg leading-6 font-medium text-slate-900">Manage Users</h3>
 
-                    {/* Search and Add Actions */}
                     <div className="flex space-x-2">
                         <div className="relative">
                             <input
@@ -264,7 +145,6 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* User List Table */}
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
@@ -299,45 +179,12 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Recent Audit Logs (Preview) */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-md">
-                <div className="bg-white px-4 py-5 sm:px-6 border-b border-slate-200">
-                    <h3 className="text-lg leading-6 font-medium text-slate-900">Recent Audit Logs</h3>
-                </div>
-                <ul className="divide-y divide-slate-200">
-                    {logs.map((log) => (
-                        <li key={log.audit_id} className="px-4 py-4 sm:px-6 hover:bg-slate-50 transition duration-150 ease-in-out">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <AlertTriangle className={`h-5 w-5 mr-3 ${log.action.includes('FAIL') || log.action.includes('DENIED') ? 'text-red-500' : 'text-slate-400'}`} />
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-900">
-                                            {log.action}
-                                        </p>
-                                        <div className="flex text-xs text-slate-500 mt-0.5">
-                                            <span className="mr-2">User ID: {log.actor_user_id}</span>
-                                            <span>• IP: {log.ip_address}</span>
-                                            <span>• Target: {log.entity_type} ({log.entity_id})</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="text-sm text-slate-500">
-                                    {new Date(log.created_at).toLocaleString()}
-                                </div>
-                            </div>
-                        </li>
-                    ))}
-                    {logs.length === 0 && <li className="px-4 py-4 text-sm text-gray-500">No logs found.</li>}
-                </ul>
-            </div>
-
-            {/* Add User Modal Dialog */}
             {showModal && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
-                    <div className="relative p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div className="mt-3 text-center">
-                            <h3 className="text-lg leading-6 font-medium text-gray-900">Add New User</h3>
-                            <form onSubmit={handleAddUser} className="mt-2 text-left">
+                    <div className="relative p-5 border w-96 shadow-lg rounded-md bg-white text-left">
+                        <div className="mt-3">
+                            <h3 className="text-lg leading-6 font-medium text-gray-900 text-center">Add New User</h3>
+                            <form onSubmit={handleAddUser} className="mt-4">
                                 <div className="mb-4">
                                     <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
                                     <input required name="username" value={formData.username} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
@@ -360,7 +207,6 @@ const AdminDashboard = () => {
                                     </select>
                                 </div>
 
-                                {/* Conditional Rendering based on selected Role */}
                                 {formData.role === 'PATIENT' && (
                                     <>
                                         <div className="mb-4">
@@ -371,7 +217,6 @@ const AdminDashboard = () => {
                                             <label className="block text-gray-700 text-sm font-bold mb-2">DOB</label>
                                             <input required type="date" name="dob" value={formData.dob} onChange={handleInputChange} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
                                         </div>
-
                                     </>
                                 )}
                                 {formData.role === 'DOCTOR' && (
@@ -412,18 +257,17 @@ const AdminDashboard = () => {
                                         </div>
                                     </>
                                 )}
-                                <div className="flex items-center justify-between mt-4">
+                                <div className="flex items-center justify-between mt-6">
                                     <button type="button" onClick={() => setShowModal(false)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Cancel</button>
-                                    <button type="submit" className="bg-teal-600 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create</button>
+                                    <button type="submit" className="bg-teal-600 hover:bg-teal-800 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Create User</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
-            )
-            }
-        </div >
+            )}
+        </div>
     );
 };
 
-export default AdminDashboard;
+export default UserManagement;

@@ -280,9 +280,63 @@ async function getPatientByUserId(userId) {
   return result.rows[0] || null;
 }
 
+/**
+ * Handle GDPR Right to Erasure Request
+ * 
+ * Anonymizes PII in `users` and `patients` tables to comply with data protection laws.
+ * Soft-deletes user account but keeps non-identifiable medical history intact.
+ * 
+ * @param {string} userId - User UUID to be erased
+ */
+async function requestDataErasure(userId) {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    // 1. Anonymize user account data
+    // Sets username to a generic deleted identifier to release original username
+    // and clears password hash.
+    await client.query(`
+      UPDATE users 
+      SET 
+        username = 'deleted_user_' || substr(user_id::text, 1, 8),
+        password_hash = 'erased',
+        is_active = false,
+        mfa_enabled = false,
+        deleted_at = NOW()
+      WHERE user_id = $1
+    `, [userId]);
+
+    // 2. Anonymize patient PII
+    // Replace encrypted name with placeholder, scrub dob and other profiling data.
+    const anonymizedName = encrypt("Deleted User");
+    await client.query(`
+      UPDATE patients
+      SET
+        full_name_encrypted = $2,
+        dob = '1900-01-01',
+        gender = 'Other',
+        blood_group = 'O+',
+        deleted_at = NOW()
+      WHERE user_id = $1
+    `, [userId, anonymizedName]);
+
+    await client.query('COMMIT');
+    return { success: true, message: "User data successfully erased and anonymized." };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error("Error during GDPR erasure process:", error);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 module.exports = {
   createPatient,
   getAllPatients,
   registerPatientWithUser,
-  getPatientByUserId
+  getPatientByUserId,
+  requestDataErasure
 };
