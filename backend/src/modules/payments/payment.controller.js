@@ -33,8 +33,8 @@ exports.createCheckoutSession = async (req, res) => {
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel`,
+            success_url: `${req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel`,
             metadata: {
                 userId,
                 appointmentId: req.body.appointmentId, // Pass appointment ID to webhook
