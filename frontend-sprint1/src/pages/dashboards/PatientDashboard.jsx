@@ -78,7 +78,7 @@ const PatientDashboard = () => {
         try {
             // Initiate Stripe Checkout
             const response = await createCheckoutSession({
-                amount: appointment.consultation_fee || 50, // Default to $50 if not set
+                amount: appointment.consultation_fee || 300, // Default to ₹300 if not set
                 description: `Consultation with ${appointment.doctor_name}`,
                 userId: user.sub || user.user_id,
                 appointmentId: appointment.appointment_id // Link payment to appointment
@@ -644,7 +644,7 @@ const PatientDashboard = () => {
                         <div className="bg-slate-50 p-5 rounded-xl flex justify-between items-center border border-slate-200 shadow-inner">
                             <span className="font-semibold text-slate-500 uppercase tracking-widest text-xs">Total Amount</span>
                             <span className="font-black text-emerald-700 text-3xl tracking-tight leading-none text-shadow-sm">
-                                ${viewingSlip.consultation_fee || '50.00'}
+                                ₹{viewingSlip.consultation_fee || '300.00'}
                             </span>
                         </div>
                     </div>

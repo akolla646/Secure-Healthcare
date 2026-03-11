@@ -13,7 +13,7 @@ const pool = require('../../config/db');
  */
 exports.createCheckoutSession = async (req, res) => {
     try {
-        const { amount, currency = 'usd', description, userId } = req.body;
+        const { amount, currency = 'inr', description, userId } = req.body;
 
         if (!amount || !userId) {
             return res.status(400).json({ error: 'Amount and User ID are required' });
