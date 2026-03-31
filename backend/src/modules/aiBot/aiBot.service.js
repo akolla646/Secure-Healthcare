@@ -41,6 +41,7 @@ CRITICAL INSTRUCTIONS:
 2. Focus entirely on lifestyle, monitoring, follow-up care, and dietary recommendations.
 3. Be specific, actionable, and empathetic.
 4. If the diagnosis file is empty, unclear, or does not contain a medical diagnosis, indicate that in the response.
+5. Do NOT mention, suggest, or recommend consulting any specific specialists (e.g., cardiologist, neurologist). You MAY suggest consulting their "regular doctor" or "primary care physician".
 
 You MUST respond with valid JSON matching exactly this schema:
 {
@@ -48,7 +49,7 @@ You MUST respond with valid JSON matching exactly this schema:
   "carePlan": {
     "monitoring": ["Array of specific things the patient should monitor at home or via tests"],
     "lifestyle": ["Array of lifestyle modifications, exercises, or habits to adopt"],
-    "followUp": ["Array of recommendations for following up with medical professionals"]
+    "followUp": ["Array of general follow-up steps (You may suggest consulting a regular doctor, but do NOT mention specific specialists)"]
   },
   "dietPlan": {
     "recommended": ["Array of specific foods or food groups they should eat"],
