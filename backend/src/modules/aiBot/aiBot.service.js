@@ -6,6 +6,28 @@ const { callLLM } = require("./llmProvider");
  */
 
 /**
+ * Strip basic PHI/PII from text to comply with HIPAA Data Minimization.
+ * 
+ * @param {string} text The raw clinical text
+ * @returns {string} Text with identified PII/PHI redacted
+ */
+const scrubPHI = (text) => {
+    let scrubbed = text;
+    // Remove Email Addresses
+    scrubbed = scrubbed.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL REMOVED]");
+    // Remove Phone Numbers
+    scrubbed = scrubbed.replace(/\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g, "[PHONE REMOVED]");
+    // Remove SSNs
+    scrubbed = scrubbed.replace(/\b\d{3}-\d{2}-\d{4}\b/g, "[SSN REMOVED]");
+    // Remove typical date formats like MM/DD/YYYY, YYYY-MM-DD
+    scrubbed = scrubbed.replace(/\b\d{1,4}[-/]\d{1,2}[-/]\d{1,4}\b/g, "[DATE REMOVED]");
+    // Remove Age if formatted like "Age: 35"
+    scrubbed = scrubbed.replace(/\b(age|yrs|years old)\s*[:\-]?\s*\d{1,3}\b/gi, "[AGE REMOVED]");
+    
+    return scrubbed;
+};
+
+/**
  * Construct the system prompt for the LLM based on our requirements.
  * 
  * @returns {string} The system prompt instructing the LLM on its behavior and output format.
@@ -49,10 +71,13 @@ exports.generateInsights = async (diagnosisText) => {
     }
 
     const systemPrompt = buildSystemPrompt();
+    
+    // HIPAA Compliance: Scrub PHI before sending to LLM
+    const scrubbedText = scrubPHI(diagnosisText);
 
     try {
-        console.log("Calling LLM with diagnosis text length:", diagnosisText.length);
-        const rawResponse = await callLLM(systemPrompt, diagnosisText);
+        console.log("Calling LLM with scrubbed text length:", scrubbedText.length);
+        const rawResponse = await callLLM(systemPrompt, scrubbedText);
 
         // The LLM might wrap the JSON in markdown code blocks like ```json ... ```
         // Let's clean that up just in case, even though we requested application/json

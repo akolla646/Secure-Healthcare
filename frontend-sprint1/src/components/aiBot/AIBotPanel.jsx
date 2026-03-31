@@ -12,6 +12,7 @@ function AIBotPanel({ apiBase }) {
     const [generating, setGenerating] = useState(false);
     const [insights, setInsights] = useState(null);
     const [error, setError] = useState(null);
+    const [consentGiven, setConsentGiven] = useState(false);
 
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
@@ -28,11 +29,17 @@ function AIBotPanel({ apiBase }) {
         setUploadStatus('idle');
         setInsights(null);
         setError(null);
+        setConsentGiven(false);
     };
 
     const handleGenerateInsights = async () => {
         if (!labReportFile) {
             setError('Please upload a diagnosis file first.');
+            return;
+        }
+
+        if (!consentGiven) {
+            setError('Please provide explicit consent to process your health data.');
             return;
         }
 
@@ -43,6 +50,7 @@ function AIBotPanel({ apiBase }) {
         try {
             const formData = new FormData();
             formData.append('diagnosisFile', labReportFile);
+            formData.append('consentGiven', true);
 
             const token = localStorage.getItem('token');
             const headers = {};
@@ -136,12 +144,30 @@ function AIBotPanel({ apiBase }) {
                         </div>
                     </div>
 
+                    {/* Consent Checkbox */}
+                    {uploadStatus === 'uploaded' && (
+                        <div className="flex items-start gap-3 mt-4 mb-2 p-4 bg-teal-50/50 border border-teal-100 rounded-lg">
+                            <input
+                                type="checkbox"
+                                id="hipaa-consent"
+                                checked={consentGiven}
+                                onChange={(e) => setConsentGiven(e.target.checked)}
+                                className="mt-1 w-4 h-4 text-teal-600 rounded border-teal-300 focus:ring-teal-500 cursor-pointer"
+                            />
+                            <label htmlFor="hipaa-consent" className="text-sm text-teal-800 cursor-pointer">
+                                <span className="font-semibold block mb-1">Health Data Consent</span>
+                                I consent to having my diagnosis data analyzed by an external AI service. 
+                                I understand that identifying information (like names, emails, phones, SSNs) will be redacted before processing to protect my privacy.
+                            </label>
+                        </div>
+                    )}
+
                     {/* Generate Button */}
-                    <div className="pt-4">
+                    <div className="pt-2">
                         <button
                             onClick={handleGenerateInsights}
-                            disabled={uploadStatus !== 'uploaded' || generating}
-                            className={`w-full py-3.5 rounded-lg font-bold text-lg shadow-sm flex items-center justify-center gap-3 transition-all ${(uploadStatus !== 'uploaded' || generating)
+                            disabled={uploadStatus !== 'uploaded' || !consentGiven || generating}
+                            className={`w-full py-3.5 rounded-lg font-bold text-lg shadow-sm flex items-center justify-center gap-3 transition-all ${(uploadStatus !== 'uploaded' || !consentGiven || generating)
                                 ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
                                 : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-500/25 border border-teal-700'
                                 }`}
